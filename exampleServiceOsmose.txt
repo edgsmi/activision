@@ -1,0 +1,4 @@
+https://localhost:8443/restservices/services/getGeneralPropertyValues?gpaKeyList=cookie.privacy.name;cookie.privacy.value.activation;cookie.privacy.value.tgc.variables
+
+
+https://localhost:8443/restservices/services/getGeneralPropertyValues?gpaKeyList=cookie.privacy.name;cookie.privacy.value.activation;cookie.privacy.value.tgc.variables&frontConfigKeyList=guideSizeDisplayWhenMono;enableAutoSurfooterBrandsCategory;prioProductOtherGroup2;oxmo.enable

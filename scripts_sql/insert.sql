@@ -1,3 +1,5 @@
+insert into ENVIRONMENT values ('LOCALHOST', 'localhost', '', 'https://localhost:8443/', 'Y');
+
 insert into FEATURE values ('CUSTOMER', 'Customer feature');
 insert into FEATURE values ('SUPPLY', 'Supply feature');
 insert into FEATURE values ('CARRIER', 'Carrier feature');
