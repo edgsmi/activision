@@ -6,18 +6,25 @@ function pReadJsonFile(file, encoding) {
 
 	var pReadFile  = promise.denodeify(fs.readFile)
 
-	var p1 = pReadFile(file, encoding);
-	var p2 = p1.then(function (data) {
-	    return data;
-	}, function (err) {
-	    // Le fichier n'existe pas, créons-le !
-	    console.log(err);
+	return new Promise(function (resolve, reject) {
+
+		var p1 = pReadFile(file, encoding);
+		var p2 = p1.then(function (data) {
+		    resolve(JSON.parse(data));
+		}, function (err) {
+		    // Le fichier n'existe pas, créons-le !
+		    console.log(err);
+		    reject(err);
+		});
+
 	});
 }
 
+function pReadJsonFileFromDir(dirName, fileName, encoding) {
+	return pReadJsonFile(dirName + "/" + fileName, encoding);
+}
 
 function readJsonFile(file, encoding, callback) {
-	
 	var data = '';
 
 	fs.readFile(file, encoding, function (err, d) {
@@ -34,9 +41,7 @@ function readJsonFile(file, encoding, callback) {
 	  	throw new Error("data is corrupted")
 	  }
 
-	  //console.dir(data);
-	  //console.log(JSON.stringify(data));
-		callback(data);  
+	  callback(data);  
 	});
 }
 
@@ -47,12 +52,10 @@ function readJsonFileSync(file, encoding) {
 
 function readJsonFileFromDir(dirName, fileName, encoding, callback) {
 	return readJsonFile(dirName + "/" + fileName, encoding, callback);
-	//var data = readJsonFileSync(dirName + "/" + fileName, encoding);
-	//console.log(data);
-	//return data;
 }
 
 
 exports.readJsonFileFromDir = readJsonFileFromDir;
 exports.readJsonFile = readJsonFile;
 exports.pReadJsonFile = pReadJsonFile;
+exports.pReadJsonFileFromDir = pReadJsonFileFromDir;

@@ -1,11 +1,11 @@
 const express = require('express');
 const app = express();
 const fs = require("fs");
-const dao = require('dao');
+const dao = require('./dao');
+const activisionUtil = require('./activisionUtil');
 
 
-
-//const dao = require('dao');
+var connection;
 
 
 var user = {
@@ -18,21 +18,138 @@ var user = {
 }
 
 
+function init() {
+	var p1 = activisionUtil.getPlaformList().then(function (conn) {
+		connection = conn;
+		console.log(connection);
+	}).catch(function (err) {
+		throw(err);
+	});
+}
 
 
+app.get('/features', function (req, res) {
+	console.log("request features begin");
+	
+	var p1 = dao.getFeatures().then(function (result) {
+		//console.log(result.rows);
+		//res.end(JSON.parse(result.rows));
+		var data = new Array();
+		result.rows.forEach(function(row) { 
+			data.push(row.FEATURE_ID);
+			//console.log(row.FEATURE_ID);
+		}
+		);
+		console.log(data);
+		//res.end(JSON.stringify(result.rows.FEATURE_ID));
+		//res.end(JSON.parse(data));
+		//res.end(JSON.stringify(data));
+		res.json({"status": "success", "data": data});
+	}).catch(function (err) {
+		throw(err);
+		res.end(err);
+	});
+})
 
-app.get('/getPlaformList', function (req, res) {
+app.get('/jiras', function (req, res) {
+	console.log("request jiras begin");
+	
+	var getJiras = dao.getJiras(req.query.feature, req.query.version);
+	// if (req.query.version !== undefined && req.query.version !== null && req.query.version !== '') {
+ //    	getJiras = dao.getJiras(req.query.version);
+ //  	}
+ //  	if (req.query.feature !== undefined && req.query.feature !== null && req.query.feature !== '') {
+	//     getJiras = dao.getJiras(req.query.version);
+ //  	}
+	
+	var p1 = getJiras.then(function (result) {
+				
+		var data = new Array();
+		result.rows.forEach(function(row) { 
+			//data.push("{" + row.JIRA_ID + "," + row.DESCRIPTION+ "}");
+			data.push(row);
+		}
+		);
+		res.json({"status": "success", "data": data});
+		
+	}).catch(function (err) {
+		throw(err);
+		res.end(err);
+	});
+})
 
+// app.get('/jiras', function (req, res) {
+	// console.log("request jiras begin");
+	
+	// var p1 = dao.getJiras().then(function (result) {
+				
+		// var data = new Array();
+		// result.rows.forEach(function(row) { 
+			// //data.push("{" + row.JIRA_ID + "," + row.DESCRIPTION+ "}");
+			// data.push(row);
+		// }
+		// );
+		// res.json({"status": "success", "data": data});
+		
+	// }).catch(function (err) {
+		// throw(err);
+		// res.end(err);
+	// });
+// })
 
-  //var data = dao.getPlaformList();
-  //console.log(data);
-  //res.end(JSON.stringify(data));
+app.get('/versions', function (req, res) {
+	console.log("request versions begin");
+	
+	var p1 = dao.getVersions().then(function (result) {
+				
+		var data = new Array();
+		result.rows.forEach(function(row) { 
+			//data.push("{" + row.JIRA_ID + "," + row.DESCRIPTION+ "}");
+			data.push(row);
+		}
+		);
+		res.json({"status": "success", "data": data});
+		
+	}).catch(function (err) {
+		throw(err);
+		res.end(err);
+	});
+})
 
+app.get('/propertyType', function (req, res) {
+	console.log("request propertyType begin");
+	
+	var p1 = dao.getPropertyType().then(function (result) {
+				
+		var data = new Array();
+		result.rows.forEach(function(row) {
+			data.push(row);
+		}
+		);
+		res.json({"status": "success", "data": data});
+		
+	}).catch(function (err) {
+		throw(err);
+		res.end(err);
+	});
+})
 
-   //fs.readFile( __dirname + "/" + "users.json", 'utf8', function (err, data) {
-   //    console.log( data );
-   //    res.end( data );
-   //});
+app.get('/property', function (req, res) {
+	console.log("request property begin");
+	
+	var p1 = dao.getProperty().then(function (result) {
+				
+		var data = new Array();
+		result.rows.forEach(function(row) {
+			data.push(row);
+		}
+		);
+		res.json({"status": "success", "data": data});
+		
+	}).catch(function (err) {
+		throw(err);
+		res.end(err);
+	});
 })
 
 
@@ -75,6 +192,9 @@ app.get('/:id', function (req, res) {
 })
 
 var server = app.listen(8585, function () {
+
+  //init();
+  // testOracle();
 
   var host = server.address().address;
   var port = server.address().port;
