@@ -1,0 +1,27 @@
+	// if (req.query.version !== undefined && req.query.version !== null && req.query.version !== '') {
+ //    	getJiras = dao.getJiras(req.query.version);
+ //  	}
+ //  	if (req.query.feature !== undefined && req.query.feature !== null && req.query.feature !== '') {
+	//     getJiras = dao.getJiras(req.query.version);
+ //  	}
+ 
+ 
+{"data":{"responseMessage":"success","fiscalSociety":""},"success":true,"errors":null,"status":"OK"}
+
+{"status": "error", "data": null, "message": "An error occured"}
+
+
+
+{"status":200, "success":true, "data": {data}, "error":null}
+{"status":200, "success":true, "data":{data}}
+
+{"status":404, "success":false, "data": null, "error":{"code": 404,"message": "An error occurred!"}}
+
+
+
+
+
+
+{"code":200, "status":"success", "data": {data}}
+
+{"code":401,"status":"error","message":"token is invalid","data":null}

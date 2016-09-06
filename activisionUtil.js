@@ -32,10 +32,7 @@ function getPlaformList() {
 	return new Promise(function (resolve, reject) {
  
 		var p1 = pGetInfoConnectionJdbc().then(function (infoConnection) {
-			console.log(infoConnection);
-			// oracleUtil.getConnection(infoConnection.login, infoConnection.pwd, infoConnection.host, infoConnection.port, infoConnection.sid).then(function (conn) {
-				// console.log(conn);
-			// });
+			//console.log(infoConnection);
 			return oracleUtil.getConnection(infoConnection.login, infoConnection.pwd, infoConnection.host, infoConnection.port, infoConnection.sid);
 		}).catch(function (err) {
 			throw(err);
@@ -59,10 +56,7 @@ function execQuery(query) {
 	return new Promise(function (resolve, reject) {
  
 		var p1 = pGetInfoConnectionJdbc().then(function (infoConnection) {
-			console.log(infoConnection);
-			// oracleUtil.getConnection(infoConnection.login, infoConnection.pwd, infoConnection.host, infoConnection.port, infoConnection.sid).then(function (conn) {
-				// console.log(conn);
-			// });
+			//console.log(infoConnection);
 			return oracleUtil.execSingleQuery(infoConnection.login, infoConnection.pwd, infoConnection.host, infoConnection.port, infoConnection.sid, query);
 		}).catch(function (err) {
 			throw(err);
@@ -70,8 +64,6 @@ function execQuery(query) {
 		
 		
 		var p2 = p1.then(function (result) {
-			//console.log("ok");
-			//console.log(connection);
 			resolve(result);
 		}).catch(function (err) {
 			throw(err);

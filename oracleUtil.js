@@ -1,5 +1,6 @@
 var db = require('promise-oracledb');
-
+var oracledb = require('oracledb');
+oracledb.autoCommit = true;
 
 
 function getConnection(user, password, host, port, sid) {
@@ -24,7 +25,7 @@ function getConnection(user, password, host, port, sid) {
 }
 
 function execSingleQuery(user, password, host, port, sid, query2) {
-
+	console.log("query : " + query2);
 	return new Promise(function (resolve, reject) {
 
 		db.setConnection({

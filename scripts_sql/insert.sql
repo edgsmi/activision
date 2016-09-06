@@ -5,8 +5,8 @@ insert into FEATURE values (2, 'SUPPLY', 'Supply feature');
 insert into FEATURE values (3, 'CARRIER', 'Carrier feature');
 insert into FEATURE values (4, 'PAYMENT', 'Payment feature');
 
-insert into PROPERTY_TYPE values (1, 'GENERAL_PROPERTY_ATTRIBUTE', '');
-insert into PROPERTY_TYPE values (2, 'FRONT_CONFIGURATION', '');
+insert into PROPERTY_TYPE values (1, 'GENERAL_PROPERTY_ATTRIBUTE', 'GPA', '');
+insert into PROPERTY_TYPE values (2, 'FRONT_CONFIGURATION', 'FC', '');
 
 insert into VERSION values (1, '16_7', 'version 16_7');
 insert into VERSION values (2, '16_8', 'version 16_8');
@@ -42,16 +42,16 @@ insert into JIRA values (21, 'CORE-15807', '', 4, 1);
 insert into JIRA values (22, 'CORE-15806', '', 4, 1);
 
 
-insert into PROPERTY values ('cookie.privacy.name', 1, 1);
-insert into PROPERTY values ('cookie.privacy.value.activation', 1, 4);
-insert into PROPERTY values ('mydecathlon.geo.base.user', 1, 6);
-insert into PROPERTY values ('customer.send.sms.check.phone.number', 1, 10);
-insert into PROPERTY values ('customer.bo.search.type.default.selected', 1, 10);
-insert into PROPERTY values ('check.same.country.geo.id.shipping.billing.address', 1, 13);
-insert into PROPERTY values ('communication.ocms.bo.counters.main.page.enabled', 1, 13);
-insert into PROPERTY values ('customer.mailparameter.datedelay.number.day', 1, 13);
-insert into PROPERTY values ('customer.forget.password.popup.enabled', 1, 16);
-insert into PROPERTY values ('ocms.mass_mailing.enabled', 1, 20);
-insert into PROPERTY values ('communication.ocms.configuration.enabled.comment.part', 1, 22);
-insert into PROPERTY values ('store.geo.location.log.enable', 1, 22);
+insert into PROP values ('cookie.privacy.name', 1, 1, '');
+insert into PROP values ('cookie.privacy.value.activation', 1, 4, '');
+insert into PROP values ('mydecathlon.geo.base.user', 1, 6, '');
+insert into PROP values ('customer.send.sms.check.phone.number', 1, 10, '');
+insert into PROP values ('customer.bo.search.type.default.selected', 1, 10, '');
+insert into PROP values ('check.same.country.geo.id.shipping.billing.address', 1, 13, '');
+insert into PROP values ('communication.ocms.bo.counters.main.page.enabled', 1, 13, '');
+insert into PROP values ('customer.mailparameter.datedelay.number.day', 1, 13, '');
+insert into PROP values ('customer.forget.password.popup.enabled', 1, 16, '');
+insert into PROP values ('ocms.mass_mailing.enabled', 1, 20, '');
+insert into PROP values ('communication.ocms.configuration.enabled.comment.part', 1, 22, '');
+insert into PROP values ('store.geo.location.log.enable', 1, 22, '');
 

@@ -1,4 +1,13 @@
 https://localhost:8443/restservices/services/getGeneralPropertyValues?gpaKeyList=cookie.privacy.name;cookie.privacy.value.activation;cookie.privacy.value.tgc.variables
 
 
+response :
+{"data":{"responseMessage":"success","gpaList":[{"propKey":"cookie.privacy.name","value":"TC_OPTOUT","jiraNum":"CORE-10795"},{"propKey":"cookie.privacy.value.activation","value":"Y","jiraNum":"CORE-10795"},{"propKey":"cookie.privacy.value.tgc.variables","value":"private","jiraNum":"CORE-10795"}],"frontConfigList":[]},"success":true,"errors":null,"status":"OK"}
+
+
+
 https://localhost:8443/restservices/services/getGeneralPropertyValues?gpaKeyList=cookie.privacy.name;cookie.privacy.value.activation;cookie.privacy.value.tgc.variables&frontConfigKeyList=guideSizeDisplayWhenMono;enableAutoSurfooterBrandsCategory;prioProductOtherGroup2;oxmo.enable
+
+
+response :
+{"data":{"responseMessage":"success","gpaList":[{"propKey":"cookie.privacy.name","value":"TC_OPTOUT","jiraNum":"CORE-10795"},{"propKey":"cookie.privacy.value.activation","value":"Y","jiraNum":"CORE-10795"},{"propKey":"cookie.privacy.value.tgc.variables","value":"private","jiraNum":"CORE-10795"}],"frontConfigList":[{"propKey":"enableAutoSurfooterBrandsCategory","value":"Y","domain":"PRODUCTS_LIST"},{"propKey":"guideSizeDisplayWhenMono","value":"Y","domain":"SIZE_GUIDE"},{"propKey":"oxmo.enable","value":"Y","domain":"PRODUCT"},{"propKey":"prioProductOtherGroup2","value":"ComponentCrossSelling","domain":"PRODUCT"}]},"success":true,"errors":null,"status":"OK"}
