@@ -17,15 +17,15 @@ function getConnection(user, password, host, port, sid) {
 
 
 		db.getConnection().then(function(conn){
-			console.log("connection ok");
+			//console.log("connection ok");
 			resolve(conn);
 		})
 		
 	});
 }
 
-function execSingleQuery(user, password, host, port, sid, query2) {
-	console.log("query : " + query2);
+function execSingleQuery(user, password, host, port, sid, query) {
+	console.log("query : " + query);
 	return new Promise(function (resolve, reject) {
 
 		db.setConnection({
@@ -38,14 +38,13 @@ function execSingleQuery(user, password, host, port, sid, query2) {
 
 
 		db.getConnection().then(function(conn){
-			console.log("connection ok");
+			// console.log("connection ok");
 		})
 
 
 		var query1 = db.createQuery({
 			//query: "select name, host from PLATFORM_CONNECTION where enabled = 'Y'",
-			//query: "select name, host from PLATFORM_CONNECTION where enabled = 'Y'",
-			query: query2
+			query: query
 		});
 
 		/*Execute Query*/

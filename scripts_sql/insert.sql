@@ -1,4 +1,26 @@
-insert into ENVIRONMENT values (1, 'localhost', '', 'https://localhost:8443/', 'Y');
+insert into COUNTRY values ('FR');
+insert into COUNTRY values ('DE');
+insert into COUNTRY values ('ES');
+insert into COUNTRY values ('UK');
+insert into COUNTRY values ('IT');
+
+insert into PLATFORM values ('LOCALHOST');
+insert into PLATFORM values ('INTE');
+insert into PLATFORM values ('EC');
+insert into PLATFORM values ('PR');
+
+
+//insert into ENVIRONMENT values (1, 'localhost', '', 'FR', 'https://localhost:8443/restservices/services/getGeneralPropertyValues', 'Y');
+insert into ENVIRONMENT values ('FR', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalFr');
+insert into ENVIRONMENT values ('FR', 'INTE', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalFr');
+insert into ENVIRONMENT values ('DE', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalDe');
+insert into ENVIRONMENT values ('DE', 'INTE', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalDe');
+insert into ENVIRONMENT values ('ES', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalEs');
+insert into ENVIRONMENT values ('ES', 'INTE', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalEs');
+
+
+insert into ENVIRONMENT values (1, 'localhost', '', 'DE', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalDe', 'Y');
+insert into ENVIRONMENT values (1, 'localhost', '', 'ES', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalEs', 'Y');
 
 insert into FEATURE values (1, 'CUSTOMER', 'Customer feature');
 insert into FEATURE values (2, 'SUPPLY', 'Supply feature');

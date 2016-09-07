@@ -1,0 +1,11 @@
+{
+    "name": "activision_server",
+    "version": "0.1.0",
+    "dependencies": {
+        "express": "~4.14.0",
+		"promise": "~7.1.1",
+		"promise-oracledb": "~2.0.5",
+		"reqclient": "~2.0.0",
+		"request": "~2.74.0"
+    }
+}
