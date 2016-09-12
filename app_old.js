@@ -9,59 +9,21 @@ const RequestClient = require("reqclient").RequestClient;
 
 
 var connection;
-var countries;
-var environments;
-var platforms;
+
+
 
 function init() {
-	return new Promise(function (resolve, reject) {
-	
-		countries = new Array();
-		var pCountries = dao.getCountries().then(function (result) {
-			result.rows.forEach(function(row) { 
-				if (!isInArray(countries, row.COUNTRY)) {
-					countries.push(row.COUNTRY);
-				}
-			});
-		}).catch(function (err) {
-			throw(err);
-		});
-		
-		environments = new Array();
-		var pEnvironments = dao.getEnvironments().then(function (result) {
-			result.rows.forEach(function(row) { 
-				environments.push(row);
-			});
-		}).catch(function (err) {
-			throw(err);
-		});
-
-		platforms = new Array();
-		var pPlatforms = dao.getPlatforms().then(function (result) {
-			result.rows.forEach(function(row) { 
-				platforms.push(row.PLATFORM);
-			});
-		}).catch(function (err) {
-			throw(err);
-		});
-		
-		var promiseArray = new Array();
-		promiseArray.push(pCountries);
-		promiseArray.push(pEnvironments);
-		promiseArray.push(pPlatforms);
-		
-		Promise.all(promiseArray).then((values) => {
-			resolve("init ok");
-		}, (err) => {
-			reject(err);
-		});	
+	var p1 = activisionUtil.getPlaformList().then(function (conn) {
+		connection = conn;
+		console.log(connection);
+	}).catch(function (err) {
+		throw(err);
 	});
 }
 
 function getParams(req) {
 	var params = querystring.parse(url.parse(req.url).query);
-	//console.log(querystring.parse(url.parse(req.url).query));
-	console.log(params);
+	console.log("params : " + params);
 	return params;
 }
 
@@ -84,13 +46,8 @@ app.get('/features', function (req, res) {
 	var p1 = dao.getFeatures().then(function (result) {
 			
 		var data = new Array();
-		result.rows.forEach(function(row, i) { 
-			console.log("length " + result.rows.length);
-			console.log("i " + i);
-			console.log("row " + row);
-			if (i === result.rows.length-1) {
-				data.push(row.FEATURE);
-			}
+		result.rows.forEach(function(row) { 
+			data.push(row.FEATURE);
 		});
 		console.log(data);
 		//res.end(JSON.stringify(result.rows.FEATURE_ID));
@@ -121,6 +78,7 @@ app.post('/features', function (req, res) {
 })
 
 app.get('/jiras', function (req, res) {
+	console.log("request jiras begin");
 	
 	var getJiras = dao.getJiras(req.query.feature, req.query.version);
 	
@@ -228,7 +186,7 @@ app.get('/countries', function (req, res) {
 	var getCountries = dao.getCountries(req.query.country);
 
 	var p1 = getCountries.then(function (result) {
-		console.log(result.rows);
+			
 		var data = new Array();
 		result.rows.forEach(function(row) { 
 			data.push(row.COUNTRY);
@@ -315,160 +273,184 @@ function isInArray(array, search) {
 	return array.indexOf(search) >= 0;
 }
 
-
-
 app.get('/propertyValues', function (req, res) {
+
 	var params = getParams(req);
 	if (!('feature' in params && 'version' in params)) {
 		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
-	} else {
-		
-		var getJiras = dao.getJiras(req.query.feature, req.query.version);
-		
-		var data = {};
-		var jiras = new Array();
-		var propsJira = {};
-		var propArray = new Array();
+	}
+
+	var getCountries = dao.getCountries(req.query.country);
+	var getPlatforms = dao.getPlatforms(req.query.platform);
+	var getFeature = dao.getFeatures(req.query.feature);
+	var getVersion = dao.getVersions(req.query.version);
+	var getJiras = dao.getJiras(req.query.feature, req.query.version);
+	//var getProps = dao.getProperty(null, );
+	var getEnvironments = dao.getEnvironments(req.query.country, req.query.platform);
 	
+	var data = {};
+	var countries = new Array();
+	var jiras = new Array();
+	var feature;
+	var version;
+	var featureId;
+	var versionId;
+	var propsJira = {};
+	var propArray = new Array();
+	
+	
+	var pFeature = getFeature.then(function (result) {
+		if (result === null || result.rows === null || result.rows.length === 0) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": "internal error"});
+		}
+		feature = result.rows.FEATURE;
+		featureId = result.rows.ID;
+		if (featureId === null || featureId === '') {
+			res.json({"code": 500, "status": "fail", "data": null, "message": "internal error"});
+		}
+		return getVersion;
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+	
+	var pVersion = pFeature.then(function (result) {
+		if (result === null || result.rows === null || result.rows.length === 0) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": "internal error"});
+		}
+		version = result.rows.VERSION;
+		versionId = result.rows.ID;
+		if (versionId === null || versionId === '') {
+			res.json({"code": 500, "status": "fail", "data": null, "message": "internal error"});
+		}
+		
+		return getJiras;
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+	
+	var pJiras = pVersion.then(function (result) {
+		result.rows.forEach(function(row) { 
+			jiras.push(row.NAME);
+		});
+		console.log("jiras");
+		console.log(jiras);
+		
+		var promisePropArray = new Array();
+		
+
+		jiras.forEach(function(jira) {
+			var pProp = dao.getProperty(null, jira, null, "GPA");
+			promisePropArray.push(pProp);
+		});
+		
+		var pAll = Promise.all(promisePropArray).then((values) => {
+			console.log("yooooo");
+			
+			for (i = 0; i < values.length; i++) {
+				var gpaList = new Array();
+				// console.log("yo " + i);
+				propsJira[jiras[i]] = {};
+				
+					
+				if (values[i].rows !== undefined && values[i].rows !== null && values[i].rows.length > 0) {		
+					values[i].rows.forEach(function(row) { 
+						if (row !== undefined && row !== null) {
+							console.log("ya");
+							console.log(row);
+							console.log(row.KEY);
+							gpaList.push(row.KEY);
+						}
+					});
+				}
+				// console.log(gpaList);
+								
+				propsJira[jiras[i]].gpaList = gpaList;
+				// propsJira[jiras[i]].frontConfigList = frontConfigList;
+			}
+
+			// console.log("end");
+			return getCountries;
+		});
+		
+		return pAll;
+		// return getProps;
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+
+	
+	var pCountries = pJiras.then(function (result) {
+		
+		console.log("propsJira");			
+		console.log(propsJira);
+		
+		result.rows.forEach(function(row) { 
+			if (!isInArray(countries, row.COUNTRY)) {
+				countries.push(row.COUNTRY);
+			}
+		});
 		countries.forEach(function(country) {
 			data[country] = {};
-			platforms.forEach(function(platform) {
-				data[country][platform] = {};
-			});
 		});
 		
-		var pJiras = getJiras.then(function (result) {
-			
-			return new Promise(function (resolve, reject) {
-				
-					result.rows.forEach(function(row) { 
-						jiras.push(row.NAME);
-					});
-					
-					var promisePropArray = new Array();
+		return getEnvironments;
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
 
-					jiras.forEach(function(jira) {
-						countries.forEach(function(country) {
-							platforms.forEach(function(platform) {
-								data[country][platform][jira] = {};
-							});
-						});
-					
-						promisePropArray.push(dao.getProperty(null, jira, null));
-					});
-					
-					var pAll = Promise.all(promisePropArray).then((values) => {
-						
-						for (i = 0; i < values.length; i++) {
-							var gpaList = new Array();
-							var fcList = new Array();
-							propsJira[jiras[i]] = {};
-								
-							if (values[i].rows !== undefined && values[i].rows !== null && values[i].rows.length > 0) {		
-								values[i].rows.forEach(function(row) { 
-									if (row !== undefined && row !== null) {
-										if (row.TYPE !== undefined && row.TYPE === 'FC') {
-											fcList.push(row.KEY);
-										} else if (row.TYPE !== undefined && row.TYPE === 'GPA') {
-											gpaList.push(row.KEY);
-										}
-									}
-								});
-							}
-											
-							propsJira[jiras[i]].gpaList = gpaList;
-							propsJira[jiras[i]].fcList = fcList;
-						}
-
-						resolve("ok");
-					});
-					
-					return pAll;
-				
-				});
-				
-		}).catch(function (err) {
-			return new Promise(function (resolve, reject) {
-				reject(err);
-			});
-		});
-		
-			
-		
-		var p1 = pJiras.then(function (result) {
-		
-			return new Promise(function (resolve, reject) {
-				
-				
-				environments.forEach(function(e, ei) {
-					
-					var promiseArray = new Array();
-					
-					jiras.forEach(function(jira) {
-
-						var gpaList = propsJira[jira].gpaList;
-						var fcList = propsJira[jira].fcList;
-						
-						var gpaListParam = "";
-						gpaList.forEach(function(gpa) {
-							gpaListParam += gpa + ";"
-						});
-
-						var fcListParam = "";
-						fcList.forEach(function(fc) {
-							fcListParam += fc + ";"
-						});						
-						
-						
-						var isGpaListParam = (gpaListParam !== undefined && gpaListParam !== null && gpaListParam !== "");
-						var isFcListParam = (fcListParam !== undefined && fcListParam !== null && fcListParam !== "");
-						
-						if (isGpaListParam || isFcListParam) {	
-							var client = new RequestClient({
-							baseUrl:e.BASE_URL, debugRequest:true, debugResponse:true});
-							// promiseArray.push(client.get(e.SERVICE));
-							//promiseArray.push(client.get({"uri": e.SERVICE}));
-							var queryParam = {};
-							if (isGpaListParam) {
-								queryParam.gpaKeyList = gpaListParam;
-							}
-							if (isFcListParam) {
-								queryParam.frontConfigKeyList = fcListParam;
-							}
-							promiseArray.push(client.get({"uri": e.SERVICE, "query": queryParam}));
-							// promiseArray.push(client.get({"uri": e.SERVICE, "query": {"gpaKeyList": gpaListParam, "frontConfigList": null}}));
-						}
-					});
-					
-					
-					Promise.all(promiseArray).then((values) => {
-					
-						for (i = 0; i < values.length; i++) {
-							// console.log(data[e.COUNTRY]);
-							data[e.COUNTRY][e.PLATFORM][jiras[i]].gpaList = values[i].data.gpaList;
-							data[e.COUNTRY][e.PLATFORM][jiras[i]].fcList = values[i].data.frontConfigList;
-						} 
-						
-						if (ei === environments.length-1) {
-							resolve("ok");
-						}
-						
-					});
-					
-				});	
-			
-			});
-
-		});
-		
-		var p0 = p1.then(function (result) {
-			res.json({"code": 200, "status": "success", "data": data});
-		}).catch(function (err) {
-			res.json({"code": 500, "status": "fail", "data": null, "message": err});
-		});
-	}
-})
+	var callArray = new Array();
 	
+	var p1 = pCountries.then(function (result) {
+	
+		var env = new Array();
+		result.rows.forEach(function(row) { 
+			env.push(row);
+			data[row.COUNTRY][row.PLATFORM] = {};
+		});
+
+		console.log(data);
+		
+		
+		var promiseArray = new Array();
+		
+		env.forEach(function(e) {
+			
+			console.log("jiras");
+			jiras.forEach(function(jira) {
+				console.log(jira);
+				console.log("gpaslist:")
+				console.log(propsJira[jira].gpaList);
+				var gpaList = propsJira[jira].gpaList;
+				if (gpaList !== undefined && gpaList !== null && gpaList.length > 0) {	
+				
+					var client = new RequestClient({
+					baseUrl:e.BASE_URL, debugRequest:true, debugResponse:true});
+					// promiseArray.push(client.get(e.SERVICE));
+					//promiseArray.push(client.get({"uri": e.SERVICE}));
+					promiseArray.push(client.get({"uri": e.SERVICE, "query": {"gpaKeyList": gpaList, "frontConfigList": fcList}}));
+				}
+			});
+			
+			
+		});
+		
+		Promise.all(promiseArray).then((values) => {
+			for (i = 0; i < values.length; i++) {
+				console.log(env[i]);
+				data[env[i].COUNTRY][env[i].PLATFORM].gpaList = values[i].data.gpaList;
+				data[env[i].COUNTRY][env[i].PLATFORM].frontConfigList = values[i].data.frontConfigList;
+			} 
+			
+			res.json({"code": 200, "status": "success", "data": data});
+		});
+		
+		
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+
+})
+
 
 app.use(function(req, res, next){
     res.setHeader('Content-Type', 'text/plain');
@@ -477,17 +459,13 @@ app.use(function(req, res, next){
 
 var server = app.listen(8585, function () {
 
-  pInit = init();
-  pInit.then(function (result) {
+  //init();
 
-	var host = server.address().address;
-	var port = server.address().port;
-	
-	console.log("Server listening at http://%s:%s", host, port);
-	//console.log('running at http://' + host + ':' + port);
-	console.log("Express server listening on port %d in %s mode", port, app.settings.env);
-			
-	}).catch(function (err) {
-		console.log("Error where init server");
-	});
+  var host = server.address().address;
+  var port = server.address().port;
+
+  console.log("Server listening at http://%s:%s", host, port);
+  //console.log('running at http://' + host + ':' + port);
+  console.log("Express server listening on port %d in %s mode", port, app.settings.env);
+
 })
