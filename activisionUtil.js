@@ -71,8 +71,13 @@ function onError(err) {
   console.error('FAIL: ' + err.message);
 }
 
+function isInArray(array, search) {
+	return array.indexOf(search) >= 0;
+}
+
 
 exports.getInfoConnectionJdbc = getInfoConnectionJdbc;
 exports.pGetInfoConnectionJdbc = pGetInfoConnectionJdbc;
 exports.getPlaformList = getPlaformList;
 exports.execQuery = execQuery;
+exports.isInArray = isInArray;

@@ -11,11 +11,36 @@ insert into PLATFORM values ('PR');
 
 
 //insert into ENVIRONMENT values (1, 'localhost', '', 'FR', 'https://localhost:8443/restservices/services/getGeneralPropertyValues', 'Y');
-insert into ENVIRONMENT values ('FR', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalFr');
-insert into ENVIRONMENT values ('FR', 'INTE', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalFr');
-insert into ENVIRONMENT values ('DE', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalDe');
-insert into ENVIRONMENT values ('DE', 'INTE', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalDe');
-insert into ENVIRONMENT values ('ES', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalEs');
+//insert into ENVIRONMENT values ('FR', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalFr');
+//insert into ENVIRONMENT values ('FR', 'INTE', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalFr');
+//insert into ENVIRONMENT values ('DE', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalDe');
+//insert into ENVIRONMENT values ('DE', 'INTE', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalDe');
+//insert into ENVIRONMENT values ('ES', 'LOCALHOST', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalEs');
+
+
+insert into ENVIRONMENT values ('FR', 'LOCALHOST', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('DE', 'LOCALHOST', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('ES', 'LOCALHOST', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('UK', 'LOCALHOST', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('IT', 'LOCALHOST', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('FR', 'INTE', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('DE', 'INTE', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('ES', 'INTE', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('UK', 'INTE', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('IT', 'INTE', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('FR', 'EC', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('DE', 'EC', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('ES', 'EC', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('UK', 'EC', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('IT', 'EC', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('FR', 'PR', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('DE', 'PR', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('ES', 'PR', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('UK', 'PR', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+insert into ENVIRONMENT values ('IT', 'PR', '', 'https://localhost:8443/', 'restservices/services/getGeneralPropertyValues');
+
+
+
 insert into ENVIRONMENT values ('ES', 'INTE', '', 'http://localhost:8686/', 'getGeneralPropertyValuesLocalEs');
 
 
@@ -77,3 +102,12 @@ insert into PROP values ('ocms.mass_mailing.enabled', 1, 20, '');
 insert into PROP values ('communication.ocms.configuration.enabled.comment.part', 1, 22, '');
 insert into PROP values ('store.geo.location.log.enable', 1, 22, '');
 
+
+
+insert into PROP values ('mydecathlon.base.api.url', 1, 6, 'https://mydkt-preprod.oxylane.com/mydkt-server-mvc/ajax/public/api/');
+insert into PROP values ('mydecathlon.base.url.use.http', 1, 6, 'Y');
+insert into PROP values ('mydecathlon.bo.codeappli', 1, 6, 'OsmoseBo');
+insert into PROP values ('mydecathlon.bo.deletedcustomers.enable', 1, 6, '');
+insert into PROP values ('mydecathlon.bo.editadjustements.enable', 1, 6, null);
+insert into PROP values ('mydecathlon.bo.editcustomer.enable', 1, 6, 'Y');
+insert into PROP values ('mydecathlon.bo.enable', 1, 6, '');

@@ -4,6 +4,7 @@ const fs = require("fs");
 const url = require("url");
 const querystring = require('querystring');
 const RequestClient = require("reqclient").RequestClient;
+const zlib = require("zlib");
 
 
 
@@ -43,6 +44,22 @@ app.get('/getGeneralPropertyValuesLocalEs', function (req, res) {
 	res.json({"code":200, "status": "success", "data": {"responseMessage":"success","gpaList":[{"propKey":"cookie.privacy.name","value":"TC_OPTOUT","jiraNum":"CORE-10795"},{"propKey":"cookie.privacy.value.activation","value":"Y","jiraNum":"CORE-10795"},{"propKey":"cookie.privacy.value.tgc.variables","value":"private","jiraNum":"CORE-10795"}],"frontConfigKeyList":[{"propKey":"enableAutoSurfooterBrandsCategory","value":"Y","domain":"PRODUCTS_LIST"},{"propKey":"guideSizeDisplayWhenMono","value":"Y","domain":"SIZE_GUIDE"},{"propKey":"oxmo.enable","value":"Y","domain":"PRODUCT"},{"propKey":"prioProductOtherGroup2","value":"ComponentCrossSelling","domain":"PRODUCT"}]},"success":true,"errors":null,"status":"OK"});
 })
 
+app.get('/test', function (req, res) {
+	// res.writeHead(200, {'Content-Type': 'text/html', 'Content-Encoding': 'gzip'});
+	//res.writeHead(200, {'Content-Type': 'application/json', 'Content-Encoding': 'gzip'});
+	res.setHeader('Content-Type', 'application/json');
+	res.setHeader('Content-Encoding', 'gzip');
+
+    // var text = "Hello World!";
+	var jsonVar = {"code":200, "status": "success", "data": {"responseMessage":"success","gpaList":[{"propKey":"cookie.privacy.name","value":"TC_OPTOUT","jiraNum":"CORE-10795"}]}};
+	var text = JSON.stringify(jsonVar);
+	 // res.json(text);
+	
+    zlib.gzip(text, function (_, result) {  
+	  //res.json(result);
+      res.end(result);                     
+    });
+})
 
 
 

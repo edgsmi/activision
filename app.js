@@ -6,7 +6,9 @@ const querystring = require('querystring');
 const dao = require('./dao');
 const activisionUtil = require('./activisionUtil');
 const RequestClient = require("reqclient").RequestClient;
-
+const request = require('request');
+const rp = require('request-promise');
+const zlib = require("zlib");
 
 var connection;
 var countries;
@@ -19,7 +21,7 @@ function init() {
 		countries = new Array();
 		var pCountries = dao.getCountries().then(function (result) {
 			result.rows.forEach(function(row) { 
-				if (!isInArray(countries, row.COUNTRY)) {
+				if (!activisionUtil.isInArray(countries, row.COUNTRY)) {
 					countries.push(row.COUNTRY);
 				}
 			});
@@ -84,13 +86,8 @@ app.get('/features', function (req, res) {
 	var p1 = dao.getFeatures().then(function (result) {
 			
 		var data = new Array();
-		result.rows.forEach(function(row, i) { 
-			console.log("length " + result.rows.length);
-			console.log("i " + i);
-			console.log("row " + row);
-			if (i === result.rows.length-1) {
-				data.push(row.FEATURE);
-			}
+		result.rows.forEach(function(row) { 
+			data.push(row.FEATURE);
 		});
 		console.log(data);
 		//res.end(JSON.stringify(result.rows.FEATURE_ID));
@@ -311,32 +308,36 @@ app.post('/property', function (req, res) {
 	});
 })
 
-function isInArray(array, search) {
-	return array.indexOf(search) >= 0;
+
+
+function initData() {
+	var data = {};
+	countries.forEach(function(country) {
+		data[country] = {};
+		platforms.forEach(function(platform) {
+			data[country][platform] = {};
+		});
+	});
+	return data;
 }
 
-
-
+var data;
 app.get('/propertyValues', function (req, res) {
+	
+	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+	
 	var params = getParams(req);
 	if (!('feature' in params && 'version' in params)) {
 		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
 	} else {
 		
-		var getJiras = dao.getJiras(req.query.feature, req.query.version);
-		
-		var data = {};
+		data = initData();
 		var jiras = new Array();
 		var propsJira = {};
 		var propArray = new Array();
-	
-		countries.forEach(function(country) {
-			data[country] = {};
-			platforms.forEach(function(platform) {
-				data[country][platform] = {};
-			});
-		});
 		
+		
+		var getJiras = dao.getJiras(req.query.feature, req.query.version);
 		var pJiras = getJiras.then(function (result) {
 			
 			return new Promise(function (resolve, reject) {
@@ -360,7 +361,11 @@ app.get('/propertyValues', function (req, res) {
 					var pAll = Promise.all(promisePropArray).then((values) => {
 						
 						for (i = 0; i < values.length; i++) {
+							
+							// console.log(jiras[i]);
+							var gpaJson = {};
 							var gpaList = new Array();
+							var fcJson = {};
 							var fcList = new Array();
 							propsJira[jiras[i]] = {};
 								
@@ -368,9 +373,11 @@ app.get('/propertyValues', function (req, res) {
 								values[i].rows.forEach(function(row) { 
 									if (row !== undefined && row !== null) {
 										if (row.TYPE !== undefined && row.TYPE === 'FC') {
-											fcList.push(row.KEY);
+											fcJson[row.KEY] = row;
+											fcList.push(row);
 										} else if (row.TYPE !== undefined && row.TYPE === 'GPA') {
-											gpaList.push(row.KEY);
+											gpaJson[row.KEY] = row;
+											gpaList.push(row);
 										}
 									}
 								});
@@ -378,6 +385,10 @@ app.get('/propertyValues', function (req, res) {
 											
 							propsJira[jiras[i]].gpaList = gpaList;
 							propsJira[jiras[i]].fcList = fcList;
+							propsJira[jiras[i]].gpaJson = gpaJson;
+							propsJira[jiras[i]].fcJson = fcJson;
+							
+							// console.log(propsJira[jiras[i]]);
 						}
 
 						resolve("ok");
@@ -393,69 +404,22 @@ app.get('/propertyValues', function (req, res) {
 			});
 		});
 		
-			
 		
 		var p1 = pJiras.then(function (result) {
 		
-			return new Promise(function (resolve, reject) {
-				
-				
+			return new Promise(function (resolve, reject) {			
+				promiseEnvArray = new Array();
+			
 				environments.forEach(function(e, ei) {
-					
-					var promiseArray = new Array();
-					
-					jiras.forEach(function(jira) {
-
-						var gpaList = propsJira[jira].gpaList;
-						var fcList = propsJira[jira].fcList;
-						
-						var gpaListParam = "";
-						gpaList.forEach(function(gpa) {
-							gpaListParam += gpa + ";"
-						});
-
-						var fcListParam = "";
-						fcList.forEach(function(fc) {
-							fcListParam += fc + ";"
-						});						
-						
-						
-						var isGpaListParam = (gpaListParam !== undefined && gpaListParam !== null && gpaListParam !== "");
-						var isFcListParam = (fcListParam !== undefined && fcListParam !== null && fcListParam !== "");
-						
-						if (isGpaListParam || isFcListParam) {	
-							var client = new RequestClient({
-							baseUrl:e.BASE_URL, debugRequest:true, debugResponse:true});
-							// promiseArray.push(client.get(e.SERVICE));
-							//promiseArray.push(client.get({"uri": e.SERVICE}));
-							var queryParam = {};
-							if (isGpaListParam) {
-								queryParam.gpaKeyList = gpaListParam;
-							}
-							if (isFcListParam) {
-								queryParam.frontConfigKeyList = fcListParam;
-							}
-							promiseArray.push(client.get({"uri": e.SERVICE, "query": queryParam}));
-							// promiseArray.push(client.get({"uri": e.SERVICE, "query": {"gpaKeyList": gpaListParam, "frontConfigList": null}}));
-						}
-					});
-					
-					
-					Promise.all(promiseArray).then((values) => {
-					
-						for (i = 0; i < values.length; i++) {
-							// console.log(data[e.COUNTRY]);
-							data[e.COUNTRY][e.PLATFORM][jiras[i]].gpaList = values[i].data.gpaList;
-							data[e.COUNTRY][e.PLATFORM][jiras[i]].fcList = values[i].data.frontConfigList;
-						} 
-						
-						if (ei === environments.length-1) {
-							resolve("ok");
-						}
-						
-					});
-					
+					promiseEnvArray.push(getResponseByEnv(e, jiras, propsJira));
 				});	
+				
+				Promise.all(promiseEnvArray).then((values) => {
+					resolve("ok");
+//					data = values[values.length-1];
+				}).catch(function (err) {
+					reject(err);					
+				});
 			
 			});
 
@@ -468,7 +432,184 @@ app.get('/propertyValues', function (req, res) {
 		});
 	}
 })
+
+
+function getResponseByEnv(e, jiras, propsJira) {
 	
+	return new Promise(function (resolve, reject) {
+	
+		var promiseArray = new Array();
+	
+		jiras.forEach(function(jira) {
+			
+			// console.log(jira);
+
+			var gpaList = propsJira[jira].gpaList;
+			var fcList = propsJira[jira].fcList;
+			
+			var gpaListParam = "";
+			gpaList.forEach(function(gpa) {
+				gpaListParam += gpa.KEY + ";"
+			});
+
+			var fcListParam = "";
+			fcList.forEach(function(fc) {
+				fcListParam += fc.KEY + ";"
+			});						
+			
+			var isGpaListParam = (gpaListParam !== undefined && gpaListParam !== null && gpaListParam !== "");
+			var isFcListParam = (fcListParam !== undefined && fcListParam !== null && fcListParam !== "");
+			
+			if (isGpaListParam || isFcListParam) {	
+				
+				var queryParam = {};
+				if (isGpaListParam) {
+					queryParam.gpaKeyList = gpaListParam;
+				}
+				if (isFcListParam) {
+					queryParam.frontConfigKeyList = fcListParam;
+				}
+				queryParam.jira = jira;
+				
+				var options = {
+				  url: e.BASE_URL + e.SERVICE,
+				  headers: {
+					'Accept-Encoding' : 'gzip, deflate',
+				  },
+				  qs: queryParam,
+				  encoding: null,
+				  resolveWithFullResponse: true,
+				  json: true
+				};
+				console.log(options.url);
+				promiseArray.push(rp(options));							
+			}
+		});
+	
+		var promiseTreatArray = new Array();
+		var pArray = Promise.all(promiseArray).then((values) => {
+			
+			for (i = 0; i < values.length; i++) {	
+				var response = values[i];
+				promiseTreatArray.push(treatResponse(e, response, propsJira));
+			} 
+						
+			Promise.all(promiseTreatArray).then((values) => {
+				
+				values.forEach(function(value) {
+					
+					if (value && value.jira) {
+						data[e.COUNTRY][e.PLATFORM][value.jira].gpaList = value.gpaListResult;
+						data[e.COUNTRY][e.PLATFORM][value.jira].fcList = value.fcListResult;
+					}
+				});
+				resolve("ok");
+			}).catch(function (err) {
+				reject(err);					
+			});
+			
+		}).catch(function (err) {
+			reject(err);					
+		});
+		
+	});
+}	
+
+function treatResponse(e, response, propsJira) {
+	
+	return new Promise(function (resolve, reject) {
+		
+		var result = {};
+		
+		if (response.statusCode === 200) {
+
+			getResponseBody(response).then(function (responseBody) {
+				if (responseBody && responseBody.data) {
+					
+					var jira = responseBody.data.jira;
+					result.jira = jira;
+					data[e.COUNTRY][e.PLATFORM][jira].gpaList = {};
+					data[e.COUNTRY][e.PLATFORM][jira].fcList = {};
+					
+					var gpaList = propsJira[jira].gpaList;
+					var fcList = propsJira[jira].fcList;
+					var gpaJson = propsJira[jira].gpaJson;
+					var fcJson = propsJira[jira].fcJson;
+					
+					var gpaListResult = new Array();
+					responseBody.data.gpaList.forEach(function(gpa) {
+						if (gpaJson[gpa.propKey]) {
+							var gpaResult = {};
+							gpaResult.key = gpa.propKey;
+							gpaResult.jira = gpa.jiraNum;
+							gpaResult.lastUpdatedByUserLogin = gpa.lastUpdatedByUserLogin;
+							gpaResult.lastUpdatedStamp = gpa.lastUpdatedStamp;
+
+							if (gpaJson[gpa.propKey].VALUE_ACTIVATION !== null && gpaJson[gpa.propKey].VALUE_ACTIVATION === gpa.value) {
+								gpaResult.value = 'Y';
+							} else {
+								gpaResult.value = 'N';
+							}
+							gpaListResult.push(gpaResult);
+						}
+					});
+					result.gpaListResult = gpaListResult;
+					
+					var fcListResult = new Array();
+					responseBody.data.frontConfigList.forEach(function(fc) {
+					
+						if (fcJson[fc.propKey]) {
+							var fcResult = {};
+							fcResult.key = fc.propKey;
+							fcResult.lastUpdatedStamp = fc.lastUpdatedStamp;
+
+							if (fcJson[fc.propKey].VALUE_ACTIVATION !== null && fcJson[fc.propKey].VALUE_ACTIVATION === fc.value) {
+								fcResult.value = 'Y';
+							} else {
+								fcResult.value = 'N';
+							}
+							fcListResult.push(fcResult);
+						}
+					});
+					result.fcListResult = fcListResult;
+					
+					resolve(result);
+				} else {
+					resolve(result);
+				}
+			});
+
+		} else {
+			resolve(result);
+		}
+		
+	}).catch(function (err) {
+		console.log(err);
+		reject(err);
+	});
+}
+
+function getResponseBody(response) {
+	
+	return new Promise(function (resolve, reject) {
+		var responseBody;
+									
+		var encoding = response.headers['content-encoding'];
+		if (encoding && encoding.indexOf('gzip') >= 0) {
+			zlib.gunzip(response.body, function(err, dezipped) {
+				var json = JSON.parse(dezipped.toString('utf-8'));
+				responseBody = json;
+				resolve(responseBody);
+			});
+		} else {
+			responseBody = response.body;
+			resolve(responseBody);
+		}
+	}).catch(function (err) {
+		console.log(err);
+		reject(err);
+	});
+}
 
 app.use(function(req, res, next){
     res.setHeader('Content-Type', 'text/plain');
@@ -476,17 +617,11 @@ app.use(function(req, res, next){
 });
 
 var server = app.listen(8585, function () {
-
-  pInit = init();
-  pInit.then(function (result) {
-
-	var host = server.address().address;
-	var port = server.address().port;
-	
-	console.log("Server listening at http://%s:%s", host, port);
-	//console.log('running at http://' + host + ':' + port);
-	console.log("Express server listening on port %d in %s mode", port, app.settings.env);
-			
+	init().then(function (result) {
+		var host = server.address().address;
+		var port = server.address().port;
+		console.log("Server listening at http://%s:%s", host, port);
+		console.log("Express server listening on port %d in %s mode", port, app.settings.env);			
 	}).catch(function (err) {
 		console.log("Error where init server");
 	});
