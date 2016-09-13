@@ -544,8 +544,10 @@ function treatResponse(e, response, propsJira) {
 							gpaResult.jira = gpa.jiraNum;
 							gpaResult.lastUpdatedByUserLogin = gpa.lastUpdatedByUserLogin;
 							gpaResult.lastUpdatedStamp = gpa.lastUpdatedStamp;
-
-							if (gpaJson[gpa.propKey].VALUE_ACTIVATION !== null && gpaJson[gpa.propKey].VALUE_ACTIVATION === gpa.value) {
+							
+							if ((gpaJson[gpa.propKey].VALUE_ACTIVATION === null || gpaJson[gpa.propKey].VALUE_ACTIVATION === '') && (gpa.value === 'Y' || gpa.value === 'N')) {
+								gpaResult.value = gpa.value;
+							} else if (gpaJson[gpa.propKey].VALUE_ACTIVATION === gpa.value) {
 								gpaResult.value = 'Y';
 							} else {
 								gpaResult.value = 'N';
