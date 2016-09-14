@@ -5,7 +5,7 @@
         "express": "~4.14.0",
 		"promise": "~7.1.1",
 		"promise-oracledb": "~2.0.5",
-		"reqclient": "~2.0.0",
-		"request": "~2.74.0"
+		"request": "~2.74.0",
+		"request-promise": "~4.1.1"
     }
 }

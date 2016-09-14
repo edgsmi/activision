@@ -16,29 +16,22 @@ function pGetInfoConnectionJdbc() {
 }
 
 
-function pGetInfoConnectionJdbc2() {
-	pGetInfoConnectionJdbc().then(function (data) {
-        console.log(data);
-	}).catch(function (err) {
-    	console.error('Erreur !');
-    	console.dir(err);
-	});
-}
 
-
-
-function getPlaformList() {  
+function initConnection() {  
 		
 	return new Promise(function (resolve, reject) {
- 
+		
 		var p1 = pGetInfoConnectionJdbc().then(function (infoConnection) {
 			return oracleUtil.getConnection(infoConnection.login, infoConnection.pwd, infoConnection.host, infoConnection.port, infoConnection.sid);
 		}).catch(function (err) {
 			throw(err);
 		});
 		
-		var p2 = p1.then(function (connection) {
-			resolve(connection);
+		var p2 = p1.then(function (result) {
+			resolve(result);
+		},
+		function(err) {
+			reject(err);
 		}).catch(function (err) {
 			throw(err);
 		});
@@ -47,7 +40,7 @@ function getPlaformList() {
 }
 
 
-function execQuery(query) {  
+function execSingleQuery(query) {  
 		
 	return new Promise(function (resolve, reject) {
  
@@ -57,14 +50,34 @@ function execQuery(query) {
 			throw(err);
 		});
 		
-		var p2 = p1.then(function (result) {
-			resolve(result);
-		}).catch(function (err) {
-			throw(err);
-		});
+		var p2 = p1.then(
+			function (result) {
+				resolve(result);
+			},
+			function(err) {
+				reject(err);
+			}).catch(function (err) {
+				throw(err);
+			});
 	
 	});
 }
+
+function execQuery(query) {  
+	return new Promise(function (resolve, reject) {
+		oracleUtil.execQuery(query).then(
+			function (result) {
+				resolve(result);
+			},
+			function(err) {
+				reject(err);
+			}).catch(function (err) {
+				throw(err);
+			});
+	
+	});
+}
+
 
 
 function onError(err) {
@@ -78,6 +91,7 @@ function isInArray(array, search) {
 
 exports.getInfoConnectionJdbc = getInfoConnectionJdbc;
 exports.pGetInfoConnectionJdbc = pGetInfoConnectionJdbc;
-exports.getPlaformList = getPlaformList;
 exports.execQuery = execQuery;
+exports.execSingleQuery = execSingleQuery;
+exports.initConnection = initConnection;
 exports.isInArray = isInArray;

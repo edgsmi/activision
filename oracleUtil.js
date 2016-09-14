@@ -1,6 +1,7 @@
-var db = require('promise-oracledb');
+var db = require('promise-oracledb');//todo : replace by node-oracledb 1.9.1 which includes support for Promises
 var oracledb = require('oracledb');
 oracledb.autoCommit = true;
+
 
 
 function getConnection(user, password, host, port, sid) {
@@ -15,17 +16,19 @@ function getConnection(user, password, host, port, sid) {
 			enableLogging: true
 		});
 
-
 		db.getConnection().then(function(conn){
-			//console.log("connection ok");
 			resolve(conn);
-		})
+		}, function (err) {
+			reject(err);
+		}).catch(function (err) {
+			throw(err);
+		});
 		
 	});
 }
 
-function execSingleQuery(user, password, host, port, sid, query) {
-	console.log("query : " + query);
+function execSingleQuery(user, password, host, port, sid, queryStr) {
+
 	return new Promise(function (resolve, reject) {
 
 		db.setConnection({
@@ -37,31 +40,61 @@ function execSingleQuery(user, password, host, port, sid, query) {
 		});
 
 
-		db.getConnection().then(function(conn){
-			// console.log("connection ok");
-		})
-
-
-		var query1 = db.createQuery({
-			//query: "select name, host from PLATFORM_CONNECTION where enabled = 'Y'",
-			query: query
+		var query = db.createQuery({
+			query: queryStr
 		});
 
 		/*Execute Query*/
-		query1.execute().then(
+		query.execute().then(
 			function(results) {
-				// console.log(results);
 				resolve(results);
 			},
 			function(err) {
-				// console.log(err);
 				reject(err);
-			}
-		);
+			}).catch(function(err) {
+				throw(err);
+		});
 
-		/* You can change the params or args then re-execute the queries*/
-		query1.args = {};
-		query1.params ={};
+		query.args = {};
+		query.params ={};
+		
+	});
+}
+
+function execQuery(queryStr) {
+
+	return new Promise(function (resolve, reject) {
+		
+		if (!queryStr) {
+			reject("queryStr must be defined");
+		}	
+		
+		db.getConnection().then(function(conn){
+			
+			var query = db.createQuery({
+				query: queryStr
+			});
+
+			/*Execute Query*/
+			query.execute().then(
+				function(results) {
+					resolve(results);
+				},
+				function(err) {
+					reject(err);
+				}
+			).catch(function(err) {
+				throw(err);
+			});
+
+			query.args = {};
+			query.params ={};
+			
+		}, function (err) {
+			reject(err);
+		}).catch(function (err) {
+			throw(err);
+		});
 		
 	});
 
@@ -69,3 +102,4 @@ function execSingleQuery(user, password, host, port, sid, query) {
 
 exports.getConnection = getConnection;
 exports.execSingleQuery = execSingleQuery;
+exports.execQuery = execQuery;

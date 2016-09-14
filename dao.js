@@ -200,6 +200,10 @@ function getVersions(name) {
 	return activisionUtil.execQuery(query);
 }
 
+function getVersion(name) {
+  var query = "select * from VERSION WHERE v_name = '" + name + "'";
+  return activisionUtil.execQuery(query);
+}
 
 function addVersion(name, description) {
 	
@@ -376,6 +380,7 @@ function getCountries(country) {
 	return activisionUtil.execQuery(query);
 }
 
+
 function getPlatforms(platform) {
 	var query = "select p_id as platform from PLATFORM";	    
 	var isPlatform = (platform !== undefined && platform !== null && platform !== '');
@@ -384,6 +389,7 @@ function getPlatforms(platform) {
 	}
 	return activisionUtil.execQuery(query);
 }
+
 
 function getEnvironments(country, platform) {
 		
@@ -416,6 +422,7 @@ exports.getJiras = getJiras;
 exports.getJira = getJira;
 exports.addJira = addJira;
 exports.getVersions = getVersions;
+exports.getVersion = getVersion;
 exports.addVersion = addVersion;
 exports.getCountries = getCountries;
 exports.getPlatforms = getPlatforms;

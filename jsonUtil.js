@@ -1,6 +1,5 @@
-
-const fs = require('fs');
-var promise = require('promise');
+const fs = require('fs'),
+promise = require('promise');
 
 function pReadJsonFile(file, encoding) {
 
@@ -8,11 +7,9 @@ function pReadJsonFile(file, encoding) {
 
 	return new Promise(function (resolve, reject) {
 
-		var p1 = pReadFile(file, encoding);
-		var p2 = p1.then(function (data) {
+		pReadFile(file, encoding).then(function (data) {
 		    resolve(JSON.parse(data));
 		}, function (err) {
-		    // Le fichier n'existe pas, créons-le !
 		    console.log(err);
 		    reject(err);
 		});
@@ -30,11 +27,9 @@ function readJsonFile(file, encoding, callback) {
 	fs.readFile(file, encoding, function (err, d) {
 	  if (err) {
 	    console.error('Error: ' + err);
-	    //throw err;// we'll not consider error handling for now
 	    return;
 	  }
 
-	  //data = JSON.parse(d);
 	  try {
 	     data = JSON.parse(d);
 	  } catch(e) {

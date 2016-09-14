@@ -1,13 +1,13 @@
-const express = require('express');
-const app = express();
-const fs = require("fs");
-const url = require("url");
-const querystring = require('querystring');
-const dao = require('./dao');
-const activisionUtil = require('./activisionUtil');
-const request = require('request');
-const rp = require('request-promise');
-const zlib = require("zlib");
+const express = require('express'),
+	app = express(),
+	fs = require("fs"),
+	url = require("url"),
+	querystring = require('querystring'),
+	dao = require('./dao'),
+	activisionUtil = require('./activisionUtil'),
+	request = require('request'),
+	rp = require('request-promise'),
+	zlib = require("zlib");
 
 var connection;
 var countries;
@@ -17,51 +17,63 @@ var platforms;
 function init() {
 	return new Promise(function (resolve, reject) {
 	
-		countries = new Array();
-		var pCountries = dao.getCountries().then(function (result) {
-			result.rows.forEach(function(row) { 
-				if (!activisionUtil.isInArray(countries, row.COUNTRY)) {
-					countries.push(row.COUNTRY);
-				}
-			});
+		var pInitConnection = activisionUtil.initConnection().then(
+		function (result) {
+			connection = result;
 		}).catch(function (err) {
 			throw(err);
 		});
-		
-		environments = new Array();
-		var pEnvironments = dao.getEnvironments().then(function (result) {
-			result.rows.forEach(function(row) { 
-				environments.push(row);
+	
+		pInitConnection.then(
+		function (result) {
+			countries = new Array();
+			var pCountries = dao.getCountries().then(function (result) {
+				result.rows.forEach(function(row) { 
+					if (!activisionUtil.isInArray(countries, row.COUNTRY)) {
+						countries.push(row.COUNTRY);
+					}
+				});
+			}).catch(function (err) {
+				throw(err);
 			});
-		}).catch(function (err) {
-			throw(err);
-		});
+			
+			environments = new Array();
+			var pEnvironments = dao.getEnvironments().then(function (result) {
+				result.rows.forEach(function(row) { 
+					environments.push(row);
+				});
+			}).catch(function (err) {
+				throw(err);
+			});
 
-		platforms = new Array();
-		var pPlatforms = dao.getPlatforms().then(function (result) {
-			result.rows.forEach(function(row) { 
-				platforms.push(row.PLATFORM);
+			platforms = new Array();
+			var pPlatforms = dao.getPlatforms().then(function (result) {
+				result.rows.forEach(function(row) { 
+					platforms.push(row.PLATFORM);
+				});
+			}).catch(function (err) {
+				throw(err);
 			});
+			
+			var promiseArray = new Array();
+			promiseArray.push(pCountries);
+			promiseArray.push(pEnvironments);
+			promiseArray.push(pPlatforms);
+			
+			Promise.all(promiseArray).then((values) => {
+				resolve("init ok");
+			}, (err) => {
+				reject(err);
+			});	
+			
 		}).catch(function (err) {
 			throw(err);
 		});
-		
-		var promiseArray = new Array();
-		promiseArray.push(pCountries);
-		promiseArray.push(pEnvironments);
-		promiseArray.push(pPlatforms);
-		
-		Promise.all(promiseArray).then((values) => {
-			resolve("init ok");
-		}, (err) => {
-			reject(err);
-		});	
 	});
 }
 
 function getParams(req) {
 	var params = querystring.parse(url.parse(req.url).query);
-	//console.log(querystring.parse(url.parse(req.url).query));
 	console.log(params);
 	return params;
 }
@@ -80,7 +92,7 @@ app.get('/', function (req, res) {
 	res.json({"code":200, "status":"success", "data": null});
 })
 
-app.get('/features', function (req, res) {
+app.get('/featureNames', function (req, res) {
 		
 	var p1 = dao.getFeatures().then(function (result) {
 			
@@ -88,10 +100,38 @@ app.get('/features', function (req, res) {
 		result.rows.forEach(function(row) { 
 			data.push(row.FEATURE);
 		});
-		console.log(data);
-		//res.end(JSON.stringify(result.rows.FEATURE_ID));
-		//res.end(JSON.parse(data));
-		//res.end(JSON.stringify(data));
+		res.json({"code":200, "status": "success", "data": data});
+	}).catch(function (err) {
+		throw(err);
+		res.json({"code":500, "status": "fail", "data": null, "message": err});
+	});
+})
+
+app.get('/features', function (req, res) {
+		
+	var p1 = dao.getFeatures().then(function (result) {
+			
+		var data = new Array();
+		result.rows.forEach(function(row) { 
+			data.push(row);
+		});
+		res.json({"code":200, "status": "success", "data": data});
+	}).catch(function (err) {
+		throw(err);
+		res.json({"code":500, "status": "fail", "data": null, "message": err});
+	});
+})
+
+app.get('/features/:name', function (req, res) {
+	
+	var name = req.params.name;
+
+	var p1 = dao.getFeatures(name).then(function (result) {
+			
+		var data = {};
+		if (result.rows && result.rows.length > 0) {
+			data = result.rows[0];
+		}
 		res.json({"code":200, "status": "success", "data": data});
 	}).catch(function (err) {
 		throw(err);
@@ -118,10 +158,6 @@ app.post('/features', function (req, res) {
 
 app.put('/features/:name', function (req, res) {
 	
-	// var params = getParams(req);
-	// if (!('name' in params)) {
-		// res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
-	// }
 	var updateFeature = dao.updateaddFeature(req.params.name);
 		
 	var p1 = updateFeature.then(function (result) {
@@ -141,12 +177,9 @@ app.get('/jiras', function (req, res) {
 				
 		var data = new Array();
 		result.rows.forEach(function(row) { 
-			//data.push("{" + row.JIRA_ID + "," + row.DESCRIPTION+ "}");
 			data.push(row);
-		}
-		);
+		});
 		res.json({"code":200, "status": "success", "data": data});
-		
 	}).catch(function (err) {
 		throw(err);
 		res.json({"code":500, "status": "fail", "data": null, "message": err});
@@ -156,29 +189,48 @@ app.get('/jiras', function (req, res) {
 app.post('/jiras', function (req, res) {
 	
 	var params = getParams(req);
-	 if (!('name' in params && 'version' in params && 'feature' in params)) {
+	if (!('name' in params && 'version' in params && 'feature' in params)) {
 		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
+	} else {
+		var addJira = dao.addJira(req.query.name, req.query.description, req.query.version, req.query.feature);
+			
+		var p1 = addJira.then(function (result) {
+			res.json({"code": 200, "status": "success"});
+		}, function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		}).catch(function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		});
 	}
-	var addJira = dao.addJira(req.query.name, req.query.description, req.query.version, req.query.feature);
-		
-	var p1 = addJira.then(function (result) {
-		res.json({"code": 200, "status": "success"});
-	}, function (err) {
-		res.json({"code": 500, "status": "fail", "data": null, "message": err});
-	}).catch(function (err) {
-		res.json({"code": 500, "status": "fail", "data": null, "message": err});
-	});
 })
 
 app.get('/jiras/:name', function (req, res) {
 	
 	var getJira = dao.getJira(req.params.name);
 	
-	var p1 = getJira.then(function (result) {
-		var data = result.rows[0];
+	getJira.then(function (result) {
+		var data = {};
+		if (result.rows && result.rows.length > 0) {
+			data = result.rows[0];
+		}
 		res.json({"code":200, "status": "success", "data": data});
 	}).catch(function (err) {
 		throw(err);
+		res.json({"code":500, "status": "fail", "data": null, "message": err});
+	});
+})
+
+app.get('/versionNames', function (req, res) {
+	
+	var p1 = dao.getVersions().then(function (result) {
+				
+		var data = new Array();
+		result.rows.forEach(function(row) { 
+			data.push(row.VERSION);
+		}
+		);
+		res.json({"code":200, "status": "success", "data": data});		
+	}).catch(function (err) {
 		res.json({"code":500, "status": "fail", "data": null, "message": err});
 	});
 })
@@ -189,12 +241,25 @@ app.get('/versions', function (req, res) {
 				
 		var data = new Array();
 		result.rows.forEach(function(row) { 
-			//data.push("{" + row.JIRA_ID + "," + row.DESCRIPTION+ "}");
-			data.push(row.VERSION);
+			data.push(row);
 		}
 		);
+		res.json({"code":200, "status": "success", "data": data});		
+	}).catch(function (err) {
+		res.json({"code":500, "status": "fail", "data": null, "message": err});
+	});
+})
+
+app.get('/versions/:name', function (req, res) {
+	
+	var getVersion = dao.getVersion(req.params.name);
+	
+	getVersion.then(function (result) {
+		var data = {};
+		if (result.rows && result.rows.length > 0) {
+			data = result.rows[0];
+		}
 		res.json({"code":200, "status": "success", "data": data});
-		
 	}).catch(function (err) {
 		throw(err);
 		res.json({"code":500, "status": "fail", "data": null, "message": err});
@@ -206,16 +271,17 @@ app.post('/versions', function (req, res) {
 	var params = getParams(req);
 	if (!('name' in params)) {
 		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
-	 }
-	var addVersion = dao.addVersion(req.query.name, req.query.description);
-		
-	var p1 = addVersion.then(function (result) {
-		res.json({"code": 200, "status": "success"});
-	}, function (err) {
-		res.json({"code": 500, "status": "fail", "data": null, "message": err});
-	}).catch(function (err) {
-		res.json({"code": 500, "status": "fail", "data": null, "message": err});
-	});
+	} else {
+		var addVersion = dao.addVersion(req.query.name, req.query.description);
+			
+		var p1 = addVersion.then(function (result) {
+			res.json({"code": 200, "status": "success"});
+		}, function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		}).catch(function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		});
+	}
 })
 
 app.get('/environments', function (req, res) {
@@ -378,7 +444,6 @@ app.get('/propertyValues', function (req, res) {
 						
 						for (i = 0; i < values.length; i++) {
 							
-							// console.log(jiras[i]);
 							var gpaJson = {};
 							var gpaList = new Array();
 							var fcJson = {};
@@ -404,7 +469,6 @@ app.get('/propertyValues', function (req, res) {
 							propsJira[jiras[i]].gpaJson = gpaJson;
 							propsJira[jiras[i]].fcJson = fcJson;
 							
-							// console.log(propsJira[jiras[i]]);
 						}
 
 						resolve("ok");
@@ -432,7 +496,6 @@ app.get('/propertyValues', function (req, res) {
 				
 				Promise.all(promiseEnvArray).then((values) => {
 					resolve("ok");
-//					data = values[values.length-1];
 				}).catch(function (err) {
 					reject(err);					
 				});
@@ -495,7 +558,6 @@ function getResponseByEnv(e, jiras, propsJira) {
 				  resolveWithFullResponse: true,
 				  json: true
 				};
-				// console.log(options.url);
 				promiseArray.push(rp(options));							
 			}
 		});
@@ -638,7 +700,10 @@ var server = app.listen(8585, function () {
 		var port = server.address().port;
 		console.log("Server listening at http://%s:%s", host, port);
 		console.log("Express server listening on port %d in %s mode", port, app.settings.env);			
+	},
+	function(err) {
+		console.log("Error where init server : " + err);
 	}).catch(function (err) {
-		console.log("Error where init server");
+		console.log("Error where init server : " + err);
 	});
 })
