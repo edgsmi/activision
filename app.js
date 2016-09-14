@@ -5,7 +5,6 @@ const url = require("url");
 const querystring = require('querystring');
 const dao = require('./dao');
 const activisionUtil = require('./activisionUtil');
-const RequestClient = require("reqclient").RequestClient;
 const request = require('request');
 const rp = require('request-promise');
 const zlib = require("zlib");
@@ -109,6 +108,23 @@ app.post('/features', function (req, res) {
 	var addFeature = dao.addFeature(req.query.name, req.query.description);
 		
 	var p1 = addFeature.then(function (result) {
+		res.json({"code": 200, "status": "success"});
+	}, function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+})
+
+app.put('/features/:name', function (req, res) {
+	
+	// var params = getParams(req);
+	// if (!('name' in params)) {
+		// res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
+	// }
+	var updateFeature = dao.updateaddFeature(req.params.name);
+		
+	var p1 = updateFeature.then(function (result) {
 		res.json({"code": 200, "status": "success"});
 	}, function (err) {
 		res.json({"code": 500, "status": "fail", "data": null, "message": err});
@@ -442,8 +458,6 @@ function getResponseByEnv(e, jiras, propsJira) {
 	
 		jiras.forEach(function(jira) {
 			
-			// console.log(jira);
-
 			var gpaList = propsJira[jira].gpaList;
 			var fcList = propsJira[jira].fcList;
 			
@@ -481,7 +495,7 @@ function getResponseByEnv(e, jiras, propsJira) {
 				  resolveWithFullResponse: true,
 				  json: true
 				};
-				console.log(options.url);
+				// console.log(options.url);
 				promiseArray.push(rp(options));							
 			}
 		});

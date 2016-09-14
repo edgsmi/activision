@@ -50,6 +50,45 @@ function addFeature(name, description) {
 		
 }
 
+function updateFeature(name, description) {
+	
+	if (name === undefined || name === null || name === '') {
+		return new Promise(function (resolve, reject) {
+			reject("name cannot be null or empty");
+		});
+	}
+		
+	var pCount = activisionUtil.execQuery("select count(*) as count from feature where f_name = '" + name + "'");
+	var pMax = activisionUtil.execQuery("select max(f_id) as current_id from feature");
+			
+	var p1 = pCount.then(function (result) {
+		var count = result.rows[0].COUNT;
+		if (count !== null && count === 0) {
+			return pMax;
+		} else {
+			throw("internal error");
+		}
+	}, function (err) {
+		throw(err);
+	}).catch(function (err) {
+		throw(err);
+	});
+	
+	return p1.then(function (result) {
+		console.log(result.rows);
+		var currentId = result.rows[0].CURRENT_ID;
+		if (currentId === null || currentId === '') {
+			throw("internal error");
+		}
+		return activisionUtil.execQuery("insert into FEATURE values (" + ++currentId + ", '" + name + "', '" + description + "')");
+	}, function (err) {
+		throw(err);
+	}).catch(function (err) {
+		throw(err);
+	});
+		
+}
+
 
 function getJiras(feature, version) {
   var query = "select j_name as name, j_description as description, f_name as feature, v_name as version from JIRA j join FEATURE f on j.J_FEATURE = f.F_ID join VERSION v on j.J_VERSION = v.V_ID";
