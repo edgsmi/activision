@@ -57,36 +57,13 @@ function updateFeature(name, description) {
 			reject("name cannot be null or empty");
 		});
 	}
-		
-	var pCount = activisionUtil.execQuery("select count(*) as count from feature where f_name = '" + name + "'");
-	var pMax = activisionUtil.execQuery("select max(f_id) as current_id from feature");
-			
-	var p1 = pCount.then(function (result) {
-		var count = result.rows[0].COUNT;
-		if (count !== null && count === 0) {
-			return pMax;
-		} else {
-			throw("internal error");
-		}
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-	
-	return p1.then(function (result) {
-		console.log(result.rows);
-		var currentId = result.rows[0].CURRENT_ID;
-		if (currentId === null || currentId === '') {
-			throw("internal error");
-		}
-		return activisionUtil.execQuery("insert into FEATURE values (" + ++currentId + ", '" + name + "', '" + description + "')");
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-		
+	if (description !== null) {
+		var query = "UPDATE FEATURE SET f_description = '" + description + "' WHERE f_name = '" + name + "'";
+		console.log(query);
+		return activisionUtil.execQuery(query);		
+	} else {
+		resolve("nothing to update");
+	}
 }
 
 
@@ -190,6 +167,99 @@ function addJira(name, description, version, feature) {
 		
 }
 
+function updateJira(name, description, version, feature) {
+	
+	// if (name === undefined || name === null || name === '') {
+		// return new Promise(function (resolve, reject) {
+			// reject("name cannot be null or empty");
+		// });
+	// }
+	
+	// if (description !== null || version !== null || feature !== null) {
+		// var query = "UPDATE JIRA SET ";
+		// if (description !== null) {
+			// query += f_description = '" + description + "'";
+		// }
+		
+		// query += " WHERE j_name = '" + name + "'";
+		// return activisionUtil.execQuery(query);		
+	// }
+		
+	// } else {
+		// resolve("nothing to update");
+	// }
+}
+
+
+function test() {
+	var maMap = new Map();
+
+var objetClé = {},
+    fonctionClé = function () {},
+    chaineClé = "une chaîne";
+
+// définir les valeurs
+maMap.set(chaineClé, "valeur associée à 'une chaîne'");
+maMap.set(objetClé, "valeur associée à objetClé");
+maMap.set(fonctionClé, "valeur associée à fonctionClé");
+
+if (maMap.constructor == Map) {
+	console.log(maMap.size); // 3
+	console.log(maMap.get(chaineClé));
+}
+console.log(maMap.constructor);
+}
+
+
+function update(table, fieldsMap) {
+	
+	if (table === undefined || table === null || table === '') {
+		return new Promise(function (resolve, reject) {
+			reject("table parameter cannot be null or empty");
+		});
+	}
+	
+	if (fieldsMap === undefined || fieldsMap === null || fieldsMap.constructor !== Map) {
+		reject("invalid parameter fieldsMap");
+	}
+	
+	var primaryKey = fieldsMap.get(primaryKey);
+	if (primaryKey === undefined || primaryKey === null || primaryKey === '') {
+		reject("primaryKey cannot be null or empty");
+	}
+	
+	var fieldsToUpdate = fieldsMap.get(fieldsToUpdate);
+	if (fieldsToUpdate === undefined || fieldsToUpdate === null || fieldsToUpdate.constructor !== Map) {
+		reject("fieldsToUpdate cannot be null or empty");
+	}
+	
+	for (var [clé, valeur] of maMap.entries()) {
+	  console.log(clé + " = " + valeur);
+	}
+	
+	
+	
+	// if (primaryKey === undefined || primaryKey === null || primaryKey === '') {
+		// return new Promise(function (resolve, reject) {
+			// reject("primaryKey parameter cannot be null or empty");
+		// });
+	// }
+	
+	// if (fieldsToUpdate !== undefined && fieldsToUpdate !== null && fieldsToUpdate.constructor == Array && fieldsToUpdate.length > 0) {
+		// var query = "UPDATE JIRA SET ";
+		// var isUpdate = false;
+		// fieldsToUpdate.forEach(function(field, i) {
+			// if (i === 0) {
+				// query += field = '" + description + "'";
+			// }
+		// });	
+	// } else {
+		// resolve("nothing to update");
+	// }
+	
+	
+}
+
 
 function getVersions(name) {
 	var query = "select v_id as id, v_name as version from VERSION";
@@ -243,6 +313,21 @@ function addVersion(name, description) {
 		throw(err);
 	});
 		
+}
+
+function updateVersion(name, description) {
+	
+	if (name === undefined || name === null || name === '') {
+		return new Promise(function (resolve, reject) {
+			reject("name cannot be null or empty");
+		});
+	}
+	if (description !== null) {
+		var query = "UPDATE VERSION SET v_description = '" + description + "' WHERE v_name = '" + name + "'";
+		return activisionUtil.execQuery(query);		
+	} else {
+		resolve("nothing to update");
+	}		
 }
 
 
@@ -370,6 +455,26 @@ function addProperty(key, type, jira, value_activation) {
 		
 }
 
+function updateProperty(key, type, jira, value_activation) {
+	
+	if (name === undefined || name === null || name === '') {
+		return new Promise(function (resolve, reject) {
+			reject("name cannot be null or empty");
+		});
+	}
+	
+	var query = "UPDATE FEATURE SET f_name = '" + name + "'";
+
+	if (description !== null) {
+		query += ", f_description = '" + description + "'";
+	}
+	
+	query += " WHERE f_name = '" + name + "'";
+	
+	return activisionUtil.execQuery(query);		
+}
+
+
 
 function getCountries(country) {
 	var query = "select c_id as country from COUNTRY";	    
@@ -418,15 +523,24 @@ function getEnvironments(country, platform) {
 /* exports */
 exports.getFeatures = getFeatures;
 exports.addFeature = addFeature;
+exports.updateFeature = updateFeature;
+// exports.deleteFeature = deleteFeature;
 exports.getJiras = getJiras;
 exports.getJira = getJira;
 exports.addJira = addJira;
+exports.updateJira = updateJira;
 exports.getVersions = getVersions;
 exports.getVersion = getVersion;
 exports.addVersion = addVersion;
+exports.updateVersion = updateVersion;
 exports.getCountries = getCountries;
 exports.getPlatforms = getPlatforms;
 exports.getEnvironments = getEnvironments;
 exports.getPropertyType = getPropertyType;
 exports.getProperty = getProperty;
 exports.addProperty = addProperty;
+exports.updateProperty = updateProperty;
+// exports.deleteProperty = deleteProperty;
+
+
+test();

@@ -158,7 +158,7 @@ app.post('/features', function (req, res) {
 
 app.put('/features/:name', function (req, res) {
 	
-	var updateFeature = dao.updateaddFeature(req.params.name);
+	var updateFeature = dao.updateFeature(req.params.name, req.query.description);
 		
 	var p1 = updateFeature.then(function (result) {
 		res.json({"code": 200, "status": "success"});
@@ -282,6 +282,19 @@ app.post('/versions', function (req, res) {
 			res.json({"code": 500, "status": "fail", "data": null, "message": err});
 		});
 	}
+})
+
+app.put('/versions/:name', function (req, res) {
+	
+	var updateVersion = dao.updateVersion(req.params.name, req.query.description);
+		
+	var p1 = updateVersion.then(function (result) {
+		res.json({"code": 200, "status": "success"});
+	}, function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
 })
 
 app.get('/environments', function (req, res) {
