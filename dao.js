@@ -1,216 +1,6 @@
 const activisionUtil = require('./activisionUtil');
 
 
-function getFeatures(name) {
-	var query = "select f_id as id, f_name as feature from FEATURE";
-	var isName = (name !== undefined && name !== null && name !== '');
-	if (isName) {
-		query += " WHERE f_name = '" + name + "'";
-	}
-	return activisionUtil.execQuery(query);
-}
-
-
-function addFeature(name, description) {
-	
-	if (name === undefined || name === null || name === '') {
-		return new Promise(function (resolve, reject) {
-			reject("name cannot be null or empty");
-		});
-	}
-		
-	var pCount = activisionUtil.execQuery("select count(*) as count from feature where f_name = '" + name + "'");
-	var pMax = activisionUtil.execQuery("select max(f_id) as current_id from feature");
-			
-	var p1 = pCount.then(function (result) {
-		var count = result.rows[0].COUNT;
-		if (count !== null && count === 0) {
-			return pMax;
-		} else {
-			throw("internal error");
-		}
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-	
-	return p1.then(function (result) {
-		console.log(result.rows);
-		var currentId = result.rows[0].CURRENT_ID;
-		if (currentId === null || currentId === '') {
-			throw("internal error");
-		}
-		return activisionUtil.execQuery("insert into FEATURE values (" + ++currentId + ", '" + name + "', '" + description + "')");
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-		
-}
-
-function updateFeature(name, description) {
-	
-	if (name === undefined || name === null || name === '') {
-		return new Promise(function (resolve, reject) {
-			reject("name cannot be null or empty");
-		});
-	}
-	if (description !== null) {
-		var query = "UPDATE FEATURE SET f_description = '" + description + "' WHERE f_name = '" + name + "'";
-		console.log(query);
-		return activisionUtil.execQuery(query);		
-	} else {
-		resolve("nothing to update");
-	}
-}
-
-
-function getJiras(feature, version) {
-  var query = "select j_name as name, j_description as description, f_name as feature, v_name as version from JIRA j join FEATURE f on j.J_FEATURE = f.F_ID join VERSION v on j.J_VERSION = v.V_ID";
-  if (feature !== undefined && feature !== null && feature !== '') {
-    query += " where f_name = '" + feature + "'";
-  }
-  if (version !== undefined && version !== null && version !== '') {
-	if (feature !== undefined && feature !== null && feature !== '') {
-		query += " and v_name = '" + version + "'";
-	} else {
-		query += " where v_name = '" + version + "'";
-	}
-  }
-  return activisionUtil.execQuery(query);
-}
-
-
-function getJira(name) {
-  var query = "select j_name as name, j_description as description, f_name as feature, v_name as version from JIRA j join FEATURE f on j.J_FEATURE = f.F_ID join VERSION v on j.J_VERSION = v.V_ID WHERE j_name = '" + name + "'";
-  return activisionUtil.execQuery(query);
-}
-
-
-function addJira(name, description, version, feature) {
-	
-	if (name === undefined || name === null || name === '') {
-		return new Promise(function (resolve, reject) {
-			reject("name cannot be null or empty");
-		});
-	}
-	if (version === undefined || version === null || version === '') {
-		return new Promise(function (resolve, reject) {
-			reject("version cannot be null or empty");
-		});
-	}
-	if (feature === undefined || feature === null || feature === '') {
-		return new Promise(function (resolve, reject) {
-			reject("feature cannot be null or empty");
-		});
-	}
-		
-	var pCount = activisionUtil.execQuery("select count(*) as count from jira where j_name = '" + name + "'");
-	var pMax = activisionUtil.execQuery("select max(j_id) as current_id from jira");
-	var pGetVersionId = activisionUtil.execQuery("select v_id as id from version where v_name = '" + version + "'");
-	var pGetFeatureId = activisionUtil.execQuery("select f_id as id from feature where f_name = '" + feature + "'");
-			
-	var currentId;
-	var versionId;
-	var featureId;
-			
-	var p1 = pCount.then(function (result) {
-		var count = result.rows[0].COUNT;
-		if (count !== null && count === 0) {
-			return pMax;
-		} else {
-			throw("internal error");
-		}
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-	
-	var p2 = p1.then(function (result) {
-		currentId = result.rows[0].CURRENT_ID;
-		if (currentId === null || currentId === '') {
-			throw("internal error");
-		}
-		return pGetVersionId;
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-	
-	var p3 = p2.then(function (result) {
-		versionId = result.rows[0].ID;
-		if (versionId === null || versionId === '') {
-			throw("internal error");
-		}
-		return pGetFeatureId;
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-	
-	return p3.then(function (result) {
-		var featureId = result.rows[0].ID;
-		if (featureId === null || featureId === '') {
-			throw("internal error");
-		}
-		return activisionUtil.execQuery("insert into jira values (" + ++currentId + ", '" + name + "', '" + description + "', '" + versionId + "', '" + featureId + "')");
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-		
-}
-
-function updateJira(name, description, version, feature) {
-	
-	// if (name === undefined || name === null || name === '') {
-		// return new Promise(function (resolve, reject) {
-			// reject("name cannot be null or empty");
-		// });
-	// }
-	
-	// if (description !== null || version !== null || feature !== null) {
-		// var query = "UPDATE JIRA SET ";
-		// if (description !== null) {
-			// query += f_description = '" + description + "'";
-		// }
-		
-		// query += " WHERE j_name = '" + name + "'";
-		// return activisionUtil.execQuery(query);		
-	// }
-		
-	// } else {
-		// resolve("nothing to update");
-	// }
-}
-
-
-function test() {
-	var maMap = new Map();
-
-var objetClé = {},
-    fonctionClé = function () {},
-    chaineClé = "une chaîne";
-
-// définir les valeurs
-maMap.set(chaineClé, "valeur associée à 'une chaîne'");
-maMap.set(objetClé, "valeur associée à objetClé");
-maMap.set(fonctionClé, "valeur associée à fonctionClé");
-
-if (maMap.constructor == Map) {
-	console.log(maMap.size); // 3
-	console.log(maMap.get(chaineClé));
-}
-console.log(maMap.constructor);
-}
-
-
 function update(table, fieldsMap) {
 	
 	if (table === undefined || table === null || table === '') {
@@ -220,260 +10,110 @@ function update(table, fieldsMap) {
 	}
 	
 	if (fieldsMap === undefined || fieldsMap === null || fieldsMap.constructor !== Map) {
-		reject("invalid parameter fieldsMap");
+		return new Promise(function (resolve, reject) {
+			reject("invalid parameter fieldsMap");
+		});
 	}
 	
-	var primaryKey = fieldsMap.get(primaryKey);
-	if (primaryKey === undefined || primaryKey === null || primaryKey === '') {
-		reject("primaryKey cannot be null or empty");
-	}
-	
-	var fieldsToUpdate = fieldsMap.get(fieldsToUpdate);
-	if (fieldsToUpdate === undefined || fieldsToUpdate === null || fieldsToUpdate.constructor !== Map) {
-		reject("fieldsToUpdate cannot be null or empty");
-	}
-	
-	for (var [clé, valeur] of maMap.entries()) {
-	  console.log(clé + " = " + valeur);
-	}
-	
-	
-	
+	// var primaryKey = fieldsMap.get("primaryKey");
 	// if (primaryKey === undefined || primaryKey === null || primaryKey === '') {
 		// return new Promise(function (resolve, reject) {
-			// reject("primaryKey parameter cannot be null or empty");
+			// reject("primaryKey cannot be null or empty");
 		// });
 	// }
 	
-	// if (fieldsToUpdate !== undefined && fieldsToUpdate !== null && fieldsToUpdate.constructor == Array && fieldsToUpdate.length > 0) {
-		// var query = "UPDATE JIRA SET ";
-		// var isUpdate = false;
-		// fieldsToUpdate.forEach(function(field, i) {
-			// if (i === 0) {
-				// query += field = '" + description + "'";
-			// }
-		// });	
-	// } else {
-		// resolve("nothing to update");
-	// }
-	
-	
-}
-
-
-function getVersions(name) {
-	var query = "select v_id as id, v_name as version from VERSION";
-	var isName = (name !== undefined && name !== null && name !== '');
-	if (isName) {
-		query += " WHERE v_name = '" + name + "'";
-	}
-	return activisionUtil.execQuery(query);
-}
-
-function getVersion(name) {
-  var query = "select * from VERSION WHERE v_name = '" + name + "'";
-  return activisionUtil.execQuery(query);
-}
-
-function addVersion(name, description) {
-	
-	console.log("name : " + name);
-	if (name === undefined || name === null || name === '') {
+	var whereKey = fieldsMap.get("whereKey");
+	if (whereKey === undefined || whereKey === null || whereKey === '') {
 		return new Promise(function (resolve, reject) {
-			reject("name cannot be null or empty");
+			reject("whereKey cannot be null or empty");
 		});
 	}
-		
-	var pCount = activisionUtil.execQuery("select count(*) as count from version where v_name = '" + name + "'");
-	var pMax = activisionUtil.execQuery("select max(v_id) as current_id from version");
-			
-	var p1 = pCount.then(function (result) {
-		var count = result.rows[0].COUNT;
-		if (count !== null && count === 0) {
-			return pMax;
-		} else {
-			throw("internal error");
-		}
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
 	
-	return p1.then(function (result) {
-		console.log(result.rows);
-		var currentId = result.rows[0].CURRENT_ID;
-		if (currentId === null || currentId === '') {
-			throw("internal error");
-		}
-		return activisionUtil.execQuery("insert into VERSION values (" + ++currentId + ", '" + name + "', '" + description + "')");
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-		
-}
-
-function updateVersion(name, description) {
-	
-	if (name === undefined || name === null || name === '') {
+	var whereKeyValue = fieldsMap.get("whereKeyValue");
+	if (whereKeyValue === undefined || whereKeyValue === null || whereKeyValue === '') {
 		return new Promise(function (resolve, reject) {
-			reject("name cannot be null or empty");
+			reject("whereKeyValue cannot be null or empty");
 		});
 	}
-	if (description !== null) {
-		var query = "UPDATE VERSION SET v_description = '" + description + "' WHERE v_name = '" + name + "'";
-		return activisionUtil.execQuery(query);		
+	
+	var fieldsToUpdate = fieldsMap.get("fieldsToUpdate");
+	if (fieldsToUpdate === undefined || fieldsToUpdate === null || fieldsToUpdate.constructor !== Map) {
+		return new Promise(function (resolve, reject) {
+			reject("fieldsToUpdate cannot be null or empty");
+		});
+	}
+	
+	var query = "UPDATE " + table + " SET ";
+	var i = 0;
+	var isUpdate = false;
+	for (var [key, value] of fieldsToUpdate.entries()) {
+		i++;
+		if (key === null) {
+			continue;
+		}
+		if (isUpdate) {
+			query += ", ";
+		}
+		query += key + " = '" + value + "'";
+		isUpdate = true;
+	}
+	query += " WHERE " + whereKey + " = '" +  whereKeyValue + "'";
+	
+	// console.log(query);
+	
+	if (isUpdate) {
+		return activisionUtil.execSingleQuery(query);
 	} else {
-		resolve("nothing to update");
-	}		
+		return new Promise(function (resolve, reject) {
+			resolve("nothing to update");
+		});
+	}
 }
 
+function del(table, whereMap) {
+	
+	if (table === undefined || table === null || table === '') {
+		return new Promise(function (resolve, reject) {
+			reject("table parameter cannot be null or empty");
+		});
+	}
+	
+	if (whereMap === undefined || whereMap === null || whereMap.constructor !== Map) {
+		return new Promise(function (resolve, reject) {
+			reject("invalid parameter whereMap");
+		});
+	}
+		
+	var query = "DELETE " + table + " WHERE ";
+	var i = 0;
+	var isDelete = false;
+	for (var [key, value] of whereMap.entries()) {
+		i++;
+		if (key === null) {
+			continue;
+		}
+		if (isDelete) {
+			query += "AND ";
+		}
+		query += key + " = '" + value + "'";
+		isDelete = true;
+	}
+	
+	console.log(query);
+	
+	if (isDelete) {
+		return activisionUtil.execSingleQuery(query);
+	} else {
+		return new Promise(function (resolve, reject) {
+			resolve("nothing to delete");
+		});
+	}
+}
 
 function getPropertyType() {
 	var query = "select pt_name as type from PROPERTY_TYPE";
 	return activisionUtil.execQuery(query);
 }
-
-
-function getProperty(key, jira, version, type, feature) {
-	
-	var query = "select p_key as key, p_value_activation as value_activation, j_name as jira, v_name as version, pt_abbrev as type from prop p join PROPERTY_TYPE pt on p.p_type = pt.pt_id join JIRA j on p.p_jira = j.j_id join VERSION v on j.J_VERSION = v.V_ID";
-		
-	var isKey = (key !== undefined && key !== null && key !== '');
-	var isJira = (jira !== undefined && jira !== null && jira !== '');
-	var isVersion = (version !== undefined && version !== null && version !== '');
-	var isType = (type !== undefined && type !== null && type !== '');
-	var isFeature = (feature !== undefined && feature !== null && feature !== '');
-	if (isKey || isJira || isVersion || isType || isFeature) {
-		query += ' WHERE';
-	}
-	if (isKey) {
-		query += " p_key = '" + key + "'";
-		if (isJira || isVersion || isType || isFeature) {
-			query += ' AND';
-		}
-	}
-	if (isJira) {
-		query += " j_name = '" + jira + "'";
-		if (isVersion || isType || isFeature) {
-			query += ' AND';
-		}
-	}
-	if (isVersion) {
-		query += " v_name = '" + version + "'";
-		if (isType || isFeature) {
-			query += ' AND';
-		}
-	}
-	if (isType) {
-		query += " pt_abbrev = '" + type + "'";
-		if (isFeature) {
-			// query += ' AND';
-		}
-	}
-	// // if (isFeature) {
-		// // query += " v_name = '" + version + "'";
-	// // }
-    
-	return activisionUtil.execQuery(query);
-}
-
-
-function addProperty(key, type, jira, value_activation) {
-	
-	if (key === undefined || key === null || key === '') {
-		return new Promise(function (resolve, reject) {
-			reject("key cannot be null or empty");
-		});
-	}
-	if (type === undefined || type === null || type === '') {
-		return new Promise(function (resolve, reject) {
-			reject("type cannot be null or empty");
-		});
-	}
-	if (jira === undefined || jira === null || jira === '') {
-		return new Promise(function (resolve, reject) {
-			reject("jira cannot be null or empty");
-		});
-	}
-		
-	var pCount = activisionUtil.execQuery("select count(*) as count from prop where p_key = '" + key + "'");
-	var pGetTypeId = activisionUtil.execQuery("select pt_id as id from property_type where pt_abbrev = '" + type + "'");
-	var pGetJiraId = activisionUtil.execQuery("select j_id as id from jira where j_name = '" + jira + "'");
-	
-			
-	var typeId;
-	var jiraId;
-			
-	var p1 = pCount.then(function (result) {
-		if (result === null || result.rows === null || result.rows.length === 0) {
-			throw("internal error");
-		}
-		var count = result.rows[0].COUNT;
-		if (count !== null && count === 0) {
-			return pGetTypeId;
-		} else {
-			throw("internal error");
-		}
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-	
-	var p2 = p1.then(function (result) {
-		if (result === null || result.rows === null || result.rows.length === 0) {
-			throw("internal error");
-		}
-		typeId = result.rows[0].ID;
-		if (typeId === null || typeId === '') {
-			throw("internal error");
-		}
-		return pGetJiraId;
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-	
-	return p2.then(function (result) {
-		if (result === null || result.rows === null || result.rows.length === 0) {
-			throw("internal error");
-		}
-		var jiraId = result.rows[0].ID;
-		if (jiraId === null || jiraId === '') {
-			throw("internal error");
-		}
-		return activisionUtil.execQuery("insert into prop values ('" + key + "', '" + typeId + "', '" + jiraId + "', '" + value_activation + "')");
-	}, function (err) {
-		throw(err);
-	}).catch(function (err) {
-		throw(err);
-	});
-		
-}
-
-function updateProperty(key, type, jira, value_activation) {
-	
-	if (name === undefined || name === null || name === '') {
-		return new Promise(function (resolve, reject) {
-			reject("name cannot be null or empty");
-		});
-	}
-	
-	var query = "UPDATE FEATURE SET f_name = '" + name + "'";
-
-	if (description !== null) {
-		query += ", f_description = '" + description + "'";
-	}
-	
-	query += " WHERE f_name = '" + name + "'";
-	
-	return activisionUtil.execQuery(query);		
-}
-
 
 
 function getCountries(country) {
@@ -521,26 +161,9 @@ function getEnvironments(country, platform) {
 
 
 /* exports */
-exports.getFeatures = getFeatures;
-exports.addFeature = addFeature;
-exports.updateFeature = updateFeature;
-// exports.deleteFeature = deleteFeature;
-exports.getJiras = getJiras;
-exports.getJira = getJira;
-exports.addJira = addJira;
-exports.updateJira = updateJira;
-exports.getVersions = getVersions;
-exports.getVersion = getVersion;
-exports.addVersion = addVersion;
-exports.updateVersion = updateVersion;
 exports.getCountries = getCountries;
 exports.getPlatforms = getPlatforms;
 exports.getEnvironments = getEnvironments;
 exports.getPropertyType = getPropertyType;
-exports.getProperty = getProperty;
-exports.addProperty = addProperty;
-exports.updateProperty = updateProperty;
-// exports.deleteProperty = deleteProperty;
-
-
-test();
+exports.update = update;
+exports.del = del;

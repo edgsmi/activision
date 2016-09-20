@@ -7,7 +7,12 @@ const express = require('express'),
 	activisionUtil = require('./activisionUtil'),
 	request = require('request'),
 	rp = require('request-promise'),
-	zlib = require("zlib");
+	zlib = require("zlib"),
+	featureDao = require('./featureDao'),
+	versionDao = require('./versionDao'),
+	jiraDao = require('./jiraDao'),
+	propertyDao = require('./propertyDao')
+	;
 
 var connection;
 var countries;
@@ -94,7 +99,7 @@ app.get('/', function (req, res) {
 
 app.get('/featureNames', function (req, res) {
 		
-	var p1 = dao.getFeatures().then(function (result) {
+	var p1 = featureDao.get().then(function (result) {
 			
 		var data = new Array();
 		result.rows.forEach(function(row) { 
@@ -109,7 +114,7 @@ app.get('/featureNames', function (req, res) {
 
 app.get('/features', function (req, res) {
 		
-	var p1 = dao.getFeatures().then(function (result) {
+	var p1 = featureDao.get().then(function (result) {
 			
 		var data = new Array();
 		result.rows.forEach(function(row) { 
@@ -126,7 +131,7 @@ app.get('/features/:name', function (req, res) {
 	
 	var name = req.params.name;
 
-	var p1 = dao.getFeatures(name).then(function (result) {
+	var p1 = featureDao.get(name).then(function (result) {
 			
 		var data = {};
 		if (result.rows && result.rows.length > 0) {
@@ -145,7 +150,7 @@ app.post('/features', function (req, res) {
 	if (!('name' in params)) {
 		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
 	}
-	var addFeature = dao.addFeature(req.query.name, req.query.description);
+	var addFeature = featureDao.add(req.query.name, req.query.description);
 		
 	var p1 = addFeature.then(function (result) {
 		res.json({"code": 200, "status": "success"});
@@ -158,7 +163,7 @@ app.post('/features', function (req, res) {
 
 app.put('/features/:name', function (req, res) {
 	
-	var updateFeature = dao.updateFeature(req.params.name, req.query.description);
+	var updateFeature = featureDao.update(req.params.name, req.query.description);
 		
 	var p1 = updateFeature.then(function (result) {
 		res.json({"code": 200, "status": "success"});
@@ -169,9 +174,40 @@ app.put('/features/:name', function (req, res) {
 	});
 })
 
+app.put('/updateFeatureById', function (req, res) {
+	
+	var params = getParams(req);
+	if (!('id' in params)) {
+		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
+	} else {
+		var updateFeature = featureDao.updateById(req.query.id, req.query.name, req.query.description);
+			
+		var p1 = updateFeature.then(function (result) {
+			res.json({"code": 200, "status": "success"});
+		}, function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		}).catch(function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		});		
+	}
+})
+
+app.delete('/features/:name', function (req, res) {
+	
+	var deleteFeature = featureDao.del(req.params.name);
+		
+	var p1 = deleteFeature.then(function (result) {
+		res.json({"code": 200, "status": "success"});
+	}, function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+})
+
 app.get('/jiras', function (req, res) {
 	
-	var getJiras = dao.getJiras(req.query.feature, req.query.version);
+	var getJiras = jiraDao.get(req.query.feature, req.query.version);
 	
 	var p1 = getJiras.then(function (result) {
 				
@@ -192,7 +228,7 @@ app.post('/jiras', function (req, res) {
 	if (!('name' in params && 'version' in params && 'feature' in params)) {
 		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
 	} else {
-		var addJira = dao.addJira(req.query.name, req.query.description, req.query.version, req.query.feature);
+		var addJira = jiraDao.add(req.query.name, req.query.description, req.query.version, req.query.feature);
 			
 		var p1 = addJira.then(function (result) {
 			res.json({"code": 200, "status": "success"});
@@ -206,7 +242,7 @@ app.post('/jiras', function (req, res) {
 
 app.get('/jiras/:name', function (req, res) {
 	
-	var getJira = dao.getJira(req.params.name);
+	var getJira = jiraDao.getJira(req.params.name);
 	
 	getJira.then(function (result) {
 		var data = {};
@@ -220,9 +256,53 @@ app.get('/jiras/:name', function (req, res) {
 	});
 })
 
+app.put('/jiras/:name', function (req, res) {
+	
+	var updateJira = jiraDao.update(req.params.name, req.query.description, req.query.version, req.query.feature);
+		
+	var p1 = updateJira.then(function (result) {
+		res.json({"code": 200, "status": "success"});
+	}, function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+})
+
+app.put('/updateJiraById', function (req, res) {
+	
+	var params = getParams(req);
+	if (!('id' in params)) {
+		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
+	} else {
+		var updateJira = jiraDao.updateById(req.query.id, req.query.name, req.query.description, req.query.version, req.query.feature);
+			
+		var p1 = updateJira.then(function (result) {
+			res.json({"code": 200, "status": "success"});
+		}, function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		}).catch(function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		});		
+	}
+})
+
+app.delete('/jiras/:name', function (req, res) {
+	
+	var deleteJira = jiraDao.del(req.params.name);
+		
+	var p1 = deleteJira.then(function (result) {
+		res.json({"code": 200, "status": "success"});
+	}, function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+})
+
 app.get('/versionNames', function (req, res) {
 	
-	var p1 = dao.getVersions().then(function (result) {
+	var p1 = versionDao.get().then(function (result) {
 				
 		var data = new Array();
 		result.rows.forEach(function(row) { 
@@ -237,7 +317,7 @@ app.get('/versionNames', function (req, res) {
 
 app.get('/versions', function (req, res) {
 	
-	var p1 = dao.getVersions().then(function (result) {
+	var p1 = versionDao.get().then(function (result) {
 				
 		var data = new Array();
 		result.rows.forEach(function(row) { 
@@ -252,7 +332,7 @@ app.get('/versions', function (req, res) {
 
 app.get('/versions/:name', function (req, res) {
 	
-	var getVersion = dao.getVersion(req.params.name);
+	var getVersion = versionDao.getVersion(req.params.name);
 	
 	getVersion.then(function (result) {
 		var data = {};
@@ -272,7 +352,7 @@ app.post('/versions', function (req, res) {
 	if (!('name' in params)) {
 		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
 	} else {
-		var addVersion = dao.addVersion(req.query.name, req.query.description);
+		var addVersion = versionDao.add(req.query.name, req.query.description);
 			
 		var p1 = addVersion.then(function (result) {
 			res.json({"code": 200, "status": "success"});
@@ -286,9 +366,40 @@ app.post('/versions', function (req, res) {
 
 app.put('/versions/:name', function (req, res) {
 	
-	var updateVersion = dao.updateVersion(req.params.name, req.query.description);
+	var updateVersion = versionDao.update(req.params.name, req.query.description);
 		
 	var p1 = updateVersion.then(function (result) {
+		res.json({"code": 200, "status": "success"});
+	}, function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+})
+
+app.put('/updateVersionById', function (req, res) {
+	
+	var params = getParams(req);
+	if (!('id' in params)) {
+		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
+	} else {
+		var updateVersion = versionDao.updateById(req.query.id, req.query.name, req.query.description);
+			
+		var p1 = updateVersion.then(function (result) {
+			res.json({"code": 200, "status": "success"});
+		}, function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		}).catch(function (err) {
+			res.json({"code": 500, "status": "fail", "data": null, "message": err});
+		});		
+	}
+})
+
+app.delete('/versions/:name', function (req, res) {
+	
+	var deleteVersion = versionDao.del(req.params.name);
+		
+	var p1 = deleteVersion.then(function (result) {
 		res.json({"code": 200, "status": "success"});
 	}, function (err) {
 		res.json({"code": 500, "status": "fail", "data": null, "message": err});
@@ -370,7 +481,7 @@ app.get('/propertyType', function (req, res) {
 
 app.get('/property', function (req, res) {
 	
-	var getProperty = dao.getProperty(req.query.key, req.query.jira, req.query.version, req.query.type);
+	var getProperty = propertyDao.get(req.query.key, req.query.jira, req.query.version, req.query.type);
 	var p1 = getProperty.then(function (result) {
 		console.log(result.rows);
 		var data = new Array();
@@ -392,7 +503,7 @@ app.post('/property', function (req, res) {
 	if (!('key' in params && 'type' in params && 'jira' in params)) {
 		res.json({"code":400, "status": "error", "data": null, "message": "missing params"});
 	}
-	var addProperty = dao.addProperty(req.query.key, req.query.type, req.query.jira, req.query.value_activation);
+	var addProperty = propertyDao.add(req.query.key, req.query.type, req.query.jira, req.query.value_activation);
 		
 	var p1 = addProperty.then(function (result) {
 		res.json({"code": 200, "status": "success"});
@@ -403,6 +514,31 @@ app.post('/property', function (req, res) {
 	});
 })
 
+app.put('/property/:name', function (req, res) {
+	
+	var updateProperty = propertyDao.update(req.params.name, req.query.type, req.query.jira, req.query.value_activation);
+		
+	var p1 = updateProperty.then(function (result) {
+		res.json({"code": 200, "status": "success"});
+	}, function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+})
+
+app.delete('/property/:name', function (req, res) {
+	
+	var deleteProperty = propertyDao.del(req.params.name);
+		
+	var p1 = deleteProperty.then(function (result) {
+		res.json({"code": 200, "status": "success"});
+	}, function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	}).catch(function (err) {
+		res.json({"code": 500, "status": "fail", "data": null, "message": err});
+	});
+})
 
 
 function initData() {
